@@ -3,172 +3,290 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AnimeHub</title>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+<title>AnimangaList</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f7f3fb;--surface:#fff;--ink:#241f3a;--muted:#6d6785;--accent:#e0406f;--line:#e4dcf0;--r:14px}
-@media (prefers-color-scheme:dark){:root{--bg:#14122b;--surface:#1f1c3d;--ink:#f1ecff;--muted:#a59fc4;--accent:#ff8fb1;--line:#322e5c}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic",system-ui,sans-serif;line-height:1.5}
-header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
-.bar{max-width:1100px;margin:auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
-h1{margin:0;font-size:1.5rem;font-weight:900;letter-spacing:-.02em}
-h1 span{color:var(--accent)}
-form{flex:1;min-width:200px;display:flex;gap:6px}
-input{flex:1;padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
-button{font:inherit;cursor:pointer}
-form button{padding:9px 16px;border:0;border-radius:99px;background:var(--accent);color:#fff;font-weight:700}
-nav{max-width:1100px;margin:10px auto 0;display:flex;gap:6px;overflow-x:auto}
-nav button{white-space:nowrap;padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:none;color:var(--muted)}
-nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
-:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-main{max-width:1100px;margin:auto;padding:18px 16px 60px}
-h2{margin:0 0 14px;font-size:1.2rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;color:inherit}
-.card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--line)}
-.card .t{padding:8px 10px 10px;font-size:.85rem;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card .m{display:block;padding:0 10px 10px;font-size:.75rem;color:var(--muted);font-weight:400}
-.badge{position:absolute;top:8px;left:8px;background:var(--accent);color:#fff;font-weight:900;font-size:.8rem;padding:2px 9px;border-radius:99px}
-.score{position:absolute;top:8px;right:8px;background:rgba(20,18,43,.8);color:#ffd36b;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:99px}
-.msg{color:var(--muted);padding:30px 0;text-align:center}
-dialog{border:0;border-radius:var(--r);background:var(--surface);color:var(--ink);max-width:560px;width:92%;padding:0}
-dialog::backdrop{background:rgba(10,8,30,.6)}
-.dl{display:flex;gap:14px;padding:18px}
-.dl img{width:130px;border-radius:10px;align-self:flex-start}
-.dl h3{margin:0 0 6px}
-.dl p{font-size:.88rem;color:var(--muted);max-height:240px;overflow:auto;margin:8px 0}
-.dl a{color:var(--accent);font-weight:700}
-.x{float:right;margin:8px;background:none;border:0;color:var(--muted);font-size:1.3rem}
-@media(max-width:480px){.dl{flex-direction:column}.dl img{width:110px}}
-@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:hover{transform:translateY(-3px)}}
+:root{--bg:#f1f5fd;--sf:#fff;--ink:#0e1a33;--mu:#5b6985;--ac:#2563eb;--ac2:#e6eeff;--ln:#d9e3f5;--r:12px}
+:root[data-theme=dark]{--bg:#0a1122;--sf:#111b33;--ink:#e8eefc;--mu:#93a3c6;--ac:#5b8cff;--ac2:#18274a;--ln:#22335c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;line-height:1.45}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;user-select:none;-webkit-user-select:none;border:0;background:none;padding:0}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--ln);padding:10px 14px 8px}
+.bar,nav,main{max-width:1100px;margin-inline:auto}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+h1{margin:0;font-size:1.35rem;font-weight:800;letter-spacing:-.03em}
+h1 span{color:var(--ac)}
+.seg{display:flex;background:var(--ac2);border-radius:99px;padding:3px}
+.seg button{padding:5px 14px;border-radius:99px;font-weight:600;font-size:.85rem;color:var(--mu)}
+.seg button.on{background:var(--ac);color:#fff}
+.ic{width:36px;height:36px;border-radius:50%;background:var(--ac2);color:var(--ac);font-size:1.1rem;margin-left:auto}
+form{flex:1 1 100%;display:flex;gap:6px;order:5}
+input,select{padding:8px 12px;border-radius:10px;border:1px solid var(--ln);background:var(--sf)}
+form input{flex:1;border-radius:99px;min-width:0}
+.pri{background:var(--ac);color:#fff;font-weight:700;border-radius:99px;padding:8px 18px}
+nav{display:flex;gap:6px;overflow-x:auto;margin-top:8px;scrollbar-width:none}
+nav button,.chip{white-space:nowrap;padding:6px 13px;border-radius:99px;border:1px solid var(--ln);color:var(--mu);font-size:.85rem;font-weight:600;background:var(--sf)}
+nav button.on,.chip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+main{padding:16px 14px 50px}
+h2{margin:0 0 12px;font-size:1.1rem}
+#ctl{margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+details summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--ac);margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(var(--cols,5),minmax(0,1fr));gap:12px}
+.card{position:relative;text-align:left;display:block;width:100%}
+.card .im{position:relative;border-radius:10px;overflow:hidden;background:var(--ln)}
+.card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block}
+.card .t{margin-top:6px;font-weight:600;font-size:clamp(.66rem,1.5vw,.84rem);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .m{font-size:clamp(.6rem,1.2vw,.72rem);color:var(--mu);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd{position:absolute;top:5px;left:5px;background:var(--ac);color:#fff;font-weight:800;font-size:.7rem;padding:1px 7px;border-radius:99px}
+.sc{position:absolute;bottom:5px;right:5px;background:rgba(10,17,34,.82);color:#ffd36b;font-weight:700;font-size:.68rem;padding:1px 7px;border-radius:99px}
+.msg{color:var(--mu);text-align:center;padding:36px 0;grid-column:1/-1}
+#more{display:block;margin:20px auto 0}
+dialog{border:0;border-radius:16px;background:var(--sf);color:var(--ink);width:92%;max-width:520px;padding:18px}
+dialog::backdrop{background:rgba(5,10,25,.6)}
+.dl{display:flex;gap:14px}
+.dl img{width:120px;height:fit-content;border-radius:10px}
+.dl h3{margin:0 0 4px}
+.dl p{font-size:.85rem;color:var(--mu);max-height:230px;overflow:auto;white-space:pre-line;margin:8px 0}
+.dl a{color:var(--ac);font-weight:700}
+.x{float:right;font-size:1.4rem;color:var(--mu);margin:-6px -2px 0 8px}
+.fld{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)}
+@media(max-width:560px){.grid{gap:8px}.dl{flex-direction:column}.dl img{width:100px}}
+@media(hover:hover){.card:hover .im{box-shadow:0 0 0 2px var(--ac)}}
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
-    <h1>Anime<span>Hub</span></h1>
-    <form id="sf"><input id="q" type="search" placeholder="Cari anime, mis. Frieren" aria-label="Cari anime"><button>Cari</button></form>
+    <h1>Animanga<span>List</span></h1>
+    <div class="seg" id="mode"><button data-m="ANIME">Anime</button><button data-m="MANGA">Manga</button></div>
+    <button class="ic" id="gear" aria-label="Settings">⚙</button>
+    <form id="sf"><input id="q" type="search"><button class="pri" data-i="go">Cari</button></form>
   </div>
-  <nav id="tabs">
-    <button data-t="pop" class="on">Anime populer</button>
-    <button data-t="rank">Ranking</button>
-    <button data-t="new">Baru rilis</button>
-    <button data-t="waifu">Daftar waifu</button>
-  </nav>
+  <nav id="tabs"></nav>
 </header>
 <main>
   <h2 id="title"></h2>
+  <div id="ctl"></div>
   <div id="out" class="grid"></div>
+  <button id="more" class="pri" data-i="more"></button>
 </main>
-<dialog id="dlg"><button class="x" aria-label="Tutup" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
+
+<dialog id="dlg"><button class="x" aria-label="Close" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
+<dialog id="set">
+  <button class="x" aria-label="Close" onclick="set.close()">×</button>
+  <h3 data-i="set"></h3>
+  <div class="fld"><span data-i="lang"></span><select id="sLang"><option value="id">Bahasa Indonesia</option><option value="en">English</option></select></div>
+  <div class="fld"><span data-i="theme"></span><select id="sTheme"><option value="auto" data-i="auto"></option><option value="light" data-i="light"></option><option value="dark" data-i="dark"></option></select></div>
+  <div class="fld"><span data-i="cols"></span><select id="sCols"><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+</dialog>
 
 <script>
 const API = "https://graphql.anilist.co";
 const $ = id => document.getElementById(id);
-const cache = {};
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const clean = s => (s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/~!|!~/g, "");
+const GEN = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror","Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi","Slice of Life","Sports","Supernatural","Thriller"];
+const SORTS = [["POPULARITY_DESC","s1"],["POPULARITY","s2"],["START_DATE_DESC","s3"],["START_DATE","s4"],["SCORE_DESC","s5"],["SCORE","s6"]];
+const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
+const L = {
+  id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Pilih genre (bisa lebih dari satu)",open:"Buka di AniList",res:"Hasil",
+    s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+  en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Pick genres (multiple allowed)",open:"Open on AniList",res:"Results",
+    s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+};
+let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
+try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
+const save = () => { try { localStorage.setItem("aml", JSON.stringify(P)); } catch (e) {} };
+const t = k => L[P.lang][k] ?? k;
+const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:""};
+let st = {list:[], page:1, more:false, b:null}, token = 0;
 
-const M = "id title{romaji english} coverImage{large} averageScore popularity format episodes seasonYear genres description(asHtml:false) siteUrl";
+const M = "id title{romaji english} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
 const C = "id name{full native} image{large} gender favourites description(asHtml:false) siteUrl media(perPage:1,sort:POPULARITY_DESC){nodes{title{romaji}}}";
+const d0 = new Date(), mo = d0.getMonth();
+const [SN, SY] = mo < 2 ? ["WINTER", d0.getFullYear()] : mo < 5 ? ["SPRING", d0.getFullYear()] : mo < 8 ? ["SUMMER", d0.getFullYear()] : mo < 11 ? ["FALL", d0.getFullYear()] : ["WINTER", d0.getFullYear() + 1];
 
-function season(){
-  const d = new Date(), m = d.getMonth(), y = d.getFullYear();
-  if (m >= 2 && m <= 4) return ["SPRING", y];
-  if (m >= 5 && m <= 7) return ["SUMMER", y];
-  if (m >= 8 && m <= 10) return ["FALL", y];
-  return ["WINTER", m === 11 ? y + 1 : y];
-}
-const mediaQ = args => `query${args.includes("$s") ? "($s:String)" : ""}{Page(perPage:24){media(type:ANIME,isAdult:false,${args}){${M}}}}`;
-const [SN, SY] = season();
+const mq = (args, p) => `{Page(page:${p},perPage:25){pageInfo{hasNextPage} media(type:${P.mode},isAdult:false,${args}){${M}}}}`;
 
-const tabs = {
-  pop:   {title:"Anime populer", q:mediaQ("sort:POPULARITY_DESC"), kind:"anime"},
-  rank:  {title:"Ranking anime (skor tertinggi)", q:mediaQ("sort:SCORE_DESC"), kind:"anime", rank:true},
-  new:   {title:"Anime baru rilis (musim ini)", q:mediaQ(`season:${SN},seasonYear:${SY},sort:POPULARITY_DESC`), kind:"anime"},
-  waifu: {title:"Daftar waifu terpopuler", q:`query{a:Page(page:1,perPage:50){characters(sort:FAVOURITES_DESC){${C}}} b:Page(page:2,perPage:50){characters(sort:FAVOURITES_DESC){${C}}}}`, kind:"char", rank:true}
-};
-let token = 0;
-
-async function gql(query, variables, tries = 0){
-  const key = query + JSON.stringify(variables || {});
-  if (cache[key]) return cache[key];
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 30000);
+async function gql(query, tries = 0){
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
   let r;
-  try {
-    r = await fetch(API, {method:"POST", signal:ctl.signal, headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query, variables})});
-  } catch (e) { throw new Error(e.name === "AbortError" ? "Server AniList tidak merespons (timeout)" : "Tidak bisa terhubung ke graphql.anilist.co"); }
+  try { r = await fetch(API, {method:"POST", signal:ctl.signal, headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query})}); }
+  catch (e) { throw new Error(e.name === "AbortError" ? "Timeout" : "Offline / blocked"); }
   finally { clearTimeout(timer); }
-  if (r.status === 429 && tries < 3) {
-    await new Promise(s => setTimeout(s, (+r.headers.get("Retry-After") || 5) * 1000));
-    return gql(query, variables, tries + 1);
-  }
+  if (r.status === 429 && tries < 3) { await new Promise(s => setTimeout(s, (+r.headers.get("Retry-After") || 5) * 1000)); return gql(query, tries + 1); }
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || j.errors) throw new Error("AniList menolak permintaan (kode " + r.status + ")");
-  return cache[key] = j.data;
+  if (!r.ok || j.errors) throw new Error("AniList " + r.status);
+  return j.data;
 }
 
-function norm(data, cfg){
-  if (cfg.kind === "char") {
-    const all = [...data.a.characters, ...data.b.characters].filter(c => c.gender === "Female").slice(0, 24);
-    return all.map(c => ({name:c.name.full, img:c.image.large, meta:(c.favorites || 0).toLocaleString("id-ID") + " favorit" + (c.media.nodes[0] ? " · " + c.media.nodes[0].title.romaji : ""),
-      info:c.name.native || "", text:clean(c.description) || "Belum ada deskripsi.", url:c.siteUrl}));
-  }
-  return data.Page.media.map(m => ({name:m.title.english || m.title.romaji, img:m.coverImage.large,
-    score:m.averageScore ? (m.averageScore / 10).toFixed(1) : "",
-    meta:[m.format, m.seasonYear, m.episodes ? m.episodes + " eps" : ""].filter(Boolean).join(" · "),
-    info:"★ " + (m.averageScore ? (m.averageScore / 10).toFixed(1) : "-") + " · " + (m.genres || []).join(", "),
-    text:clean(m.description) || "Belum ada sinopsis.", url:m.siteUrl}));
-}
-
-function card(o, i, cfg){
-  const badge = cfg.rank ? `<span class="badge">#${i + 1}</span>` : "";
-  const score = o.score ? `<span class="score">★ ${o.score}</span>` : "";
-  return `<button class="card" data-i="${i}">${badge}${score}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"><span class="t">${esc(o.name)}</span><span class="m">${esc(o.meta)}</span></button>`;
-}
-
-async function show(title, query, vars, cfg){
-  const my = ++token;
-  $("title").textContent = title;
-  $("out").className = "";
-  $("out").onclick = null;
-  $("out").innerHTML = '<p class="msg">Memuat…</p>';
-  try {
-    const list = norm(await gql(query, vars), cfg);
-    if (my !== token) return;
-    if (!list.length) { $("out").innerHTML = '<p class="msg">Tidak ada hasil. Coba kata kunci lain.</p>'; return; }
-    $("out").className = "grid";
-    $("out").innerHTML = list.map((o, i) => card(o, i, cfg)).join("");
-    $("out").onclick = e => { const c = e.target.closest(".card"); if (c) detail(list[c.dataset.i]); };
-  } catch (err) {
-    if (my !== token) return;
-    $("out").innerHTML = `<p class="msg">${esc(err.message)}.<br><br><button id="retry" style="padding:8px 16px;border-radius:99px;border:0;background:var(--accent);color:#fff;font-weight:700">Coba lagi</button></p>`;
-    $("retry").onclick = () => show(title, query, vars, cfg);
-  }
-}
-
-function detail(o){
-  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3><div>${esc(o.info)}</div><p style="white-space:pre-line">${esc(o.text)}</p><a href="${esc(o.url)}" target="_blank" rel="noopener">Buka di AniList</a></div>`;
-  $("dlg").showModal();
-}
-
-function tab(t){
-  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
-  const c = tabs[t];
-  show(c.title, c.q, {}, c);
-}
-
-$("tabs").onclick = e => { const b = e.target.closest("button"); if (b) tab(b.dataset.t); };
-$("sf").onsubmit = e => {
-  e.preventDefault();
-  const q = $("q").value.trim();
-  if (!q) return;
-  document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("on"));
-  show('Hasil pencarian: "' + q + '"', mediaQ("search:$s,sort:SEARCH_MATCH"), {s:q}, {kind:"anime"});
+const nm = m => {
+  const sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "";
+  return {name:m.title.english || m.title.romaji, img:m.coverImage.large, score:sc,
+    meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
+    info:["★ " + (sc || "-"), t("st")[m.status] || "", (m.genres || []).join(", ")].filter(Boolean).join(" · "),
+    text:clean(m.description) || t("nod"), url:m.siteUrl};
 };
-tab("pop");
+
+function filt(extra){
+  const a = [];
+  if (S.genres.length) a.push("genre_in:" + JSON.stringify(S.genres));
+  if (S.year) a.push(`startDate_greater:${S.year * 10000},startDate_lesser:${(+S.year + 1) * 10000}`);
+  if (extra) a.push(extra);
+  if (S.sort.startsWith("START")) a.push("status_not:NOT_YET_RELEASED");
+  if (S.sort.startsWith("SCORE")) a.push("averageScore_greater:0");
+  a.push("sort:" + S.sort);
+  return a.join(",");
+}
+
+function builder(){
+  const k = S.tab;
+  if (k === "waifu") return {kind:"char", rank:1, q:p => `{Page(page:${p},perPage:50){pageInfo{hasNextPage} characters(sort:FAVOURITES_DESC){${C}}}}`};
+  if (k === "sched") {
+    const s = new Date(); s.setHours(0, 0, 0, 0); s.setDate(s.getDate() + (S.wd - s.getDay() + 7) % 7);
+    const f = Math.floor(s / 1000) - 1, e = f + 86401;
+    const pg = n => `Page(page:${n},perPage:50){airingSchedules(airingAt_greater:${f},airingAt_lesser:${e},sort:TIME){airingAt episode media{${M} isAdult}}}`;
+    return {kind:"sched", q:() => `{a:${pg(1)} b:${pg(2)}}`};
+  }
+  let a;
+  if (k === "search") a = `search:${JSON.stringify(S.q)},sort:SEARCH_MATCH`;
+  else if (k === "pop") a = "sort:POPULARITY_DESC";
+  else if (k === "rank") a = "sort:SCORE_DESC";
+  else if (k === "new") a = P.mode === "ANIME" ? `season:${SN},seasonYear:${SY},sort:POPULARITY_DESC` : "status:RELEASING,sort:TRENDING_DESC";
+  else a = filt(k === "rec" ? "popularity_greater:5000" : "");
+  return {kind:"media", rank:k === "rank", q:p => mq(a, p)};
+}
+
+function norm(data, kind){
+  if (kind === "char") return {more:data.Page.pageInfo.hasNextPage, items:data.Page.characters.filter(c => c.gender === "Female").map(c => ({
+    name:c.name.full, img:c.image.large, score:"", meta:(c.favorites || 0).toLocaleString(P.lang) + " " + t("fav") + (c.media.nodes[0] ? " · " + c.media.nodes[0].title.romaji : ""),
+    info:c.name.native || "", text:clean(c.description) || t("nod"), url:c.siteUrl}))};
+  if (kind === "sched") {
+    const seen = new Set(), out = [];
+    [...data.a.airingSchedules, ...data.b.airingSchedules].forEach(x => {
+      if (x.media.isAdult || seen.has(x.media.id)) return;
+      seen.add(x.media.id);
+      const o = nm(x.media);
+      o.badge = new Date(x.airingAt * 1000).toLocaleTimeString(P.lang, {hour:"2-digit", minute:"2-digit", hour12:false});
+      o.meta = "Ep " + x.episode + " · " + o.meta; o.pop = x.media.popularity || 0;
+      out.push(o);
+    });
+    return {more:false, items:out.sort((a, b) => b.pop - a.pop)};
+  }
+  return {more:data.Page.pageInfo.hasNextPage, items:data.Page.media.map(nm)};
+}
+
+function cards(items, from, rank){
+  return items.map((o, i) => {
+    const n = from + i, b = o.badge ? `<span class="bd">${esc(o.badge)}</span>` : rank ? `<span class="bd">#${n + 1}</span>` : "";
+    return `<button class="card" data-i="${n}"><span class="im">${b}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span><span class="m">${esc(o.meta)}</span></button>`;
+  }).join("");
+}
+
+async function run(append){
+  const my = ++token, out = $("out");
+  if (!append) { st = {list:[], page:1, more:false, b:builder()}; out.innerHTML = `<p class="msg">${t("load")}</p>`; $("more").hidden = true; }
+  else st.page++;
+  try {
+    const r = norm(await gql(st.b.q(st.page)), st.b.kind);
+    if (my !== token) return;
+    const from = st.list.length;
+    st.list = st.list.concat(r.items); st.more = r.more;
+    if (!st.list.length) out.innerHTML = `<p class="msg">${t("empty")}</p>`;
+    else if (append) out.insertAdjacentHTML("beforeend", cards(r.items, from, st.b.rank));
+    else out.innerHTML = cards(r.items, 0, st.b.rank);
+    $("more").hidden = !st.more;
+    if (st.b.kind === "char" && st.more && r.items.length < 12) run(true);
+  } catch (e) {
+    if (my !== token) return;
+    if (append) st.page--;
+    out.innerHTML = `<p class="msg">${t("err")} (${esc(e.message)})<br><br><button class="pri" id="retry">${t("retry")}</button></p>`;
+    $("retry").onclick = () => run(false);
+  }
+}
+
+function renderTabs(){
+  $("tabs").innerHTML = TABS.filter(k => k !== "sched" || P.mode === "ANIME").map(k => `<button data-t="${k}" class="${S.tab === k ? "on" : ""}">${t(k)}</button>`).join("");
+}
+function renderTitle(){
+  const mode = P.mode === "ANIME" ? "Anime" : "Manga";
+  $("title").textContent = S.tab === "search" ? `${t("res")}: "${S.q}"` : S.tab === "waifu" ? t("waifu") : `${t(S.tab)} · ${mode}`;
+}
+function renderCtl(){
+  const c = $("ctl"), k = S.tab;
+  if (k === "sched") {
+    c.innerHTML = `<div class="row">${[1,2,3,4,5,6,0].map(w => `<button class="chip ${S.wd === w ? "on" : ""}" data-w="${w}">${new Date(2025, 0, 5 + w).toLocaleDateString(P.lang === "id" ? "id-ID" : "en-US", {weekday:"long"})}</button>`).join("")}</div>`;
+  } else if (k === "rec" || k === "genre") {
+    const yr = new Date().getFullYear() + 1;
+    let yo = `<option value="">${t("year")}</option>`;
+    for (let y = yr; y >= 1970; y--) yo += `<option ${S.year == y ? "selected" : ""}>${y}</option>`;
+    c.innerHTML = (k === "rec" ? `<div style="color:var(--mu);font-size:.85rem">${t("hint")}</div>` : "") +
+      `<details ${S.genres.length || k === "genre" ? "open" : ""}><summary>${t("genres")}${S.genres.length ? " (" + S.genres.length + ")" : ""}</summary><div class="row">${GEN.map(g => `<button class="chip ${S.genres.includes(g) ? "on" : ""}" data-g="${esc(g)}">${esc(g)}</button>`).join("")}</div></details>` +
+      `<div class="row"><select id="fY">${yo}</select><select id="fS">${SORTS.map(([v, l]) => `<option value="${v}" ${S.sort === v ? "selected" : ""}>${t(l)}</option>`).join("")}</select><button class="chip" id="fR">${t("reset")}</button></div>`;
+  } else c.innerHTML = "";
+}
+function go(tab){
+  S.tab = tab;
+  if (tab === "rec") S.sort = "SCORE_DESC"; else if (tab === "genre") S.sort = "POPULARITY_DESC";
+  renderTabs(); renderTitle(); renderCtl(); run(false);
+}
+function applyLang(){
+  document.documentElement.lang = P.lang;
+  document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
+  $("q").placeholder = t("ph");
+  $("sLang").value = P.lang; $("sTheme").value = P.theme; $("sCols").value = P.cols;
+  renderTabs(); renderTitle(); renderCtl();
+}
+function applyTheme(){
+  const dark = P.theme === "dark" || (P.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+}
+function applyMode(){
+  document.querySelectorAll("#mode button").forEach(b => b.classList.toggle("on", b.dataset.m === P.mode));
+}
+
+$("tabs").onclick = e => { const b = e.target.closest("button"); if (b) go(b.dataset.t); };
+$("mode").onclick = e => {
+  const b = e.target.closest("button"); if (!b || b.dataset.m === P.mode) return;
+  P.mode = b.dataset.m; save(); applyMode();
+  go(S.tab === "sched" && P.mode === "MANGA" || S.tab === "search" ? "pop" : S.tab);
+};
+$("sf").onsubmit = e => {
+  e.preventDefault(); const q = $("q").value.trim(); if (!q) return;
+  S.q = q; S.tab = "search"; renderTabs(); renderTitle(); renderCtl(); run(false);
+};
+$("ctl").onclick = e => {
+  const g = e.target.closest("[data-g]"), w = e.target.closest("[data-w]");
+  if (g) { const v = g.dataset.g, i = S.genres.indexOf(v); i < 0 ? S.genres.push(v) : S.genres.splice(i, 1); renderCtl(); run(false); }
+  else if (w) { S.wd = +w.dataset.w; renderCtl(); run(false); }
+  else if (e.target.id === "fR") { S.genres = []; S.year = ""; S.sort = S.tab === "rec" ? "SCORE_DESC" : "POPULARITY_DESC"; renderCtl(); run(false); }
+};
+$("ctl").onchange = e => {
+  if (e.target.id === "fY") S.year = e.target.value;
+  else if (e.target.id === "fS") S.sort = e.target.value; else return;
+  run(false);
+};
+$("out").onclick = e => {
+  const c = e.target.closest(".card"); if (!c) return;
+  const o = st.list[c.dataset.i];
+  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3><div style="font-size:.85rem">${esc(o.info)}</div><p>${esc(o.text)}</p><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
+  $("dlg").showModal();
+};
+$("more").onclick = () => run(true);
+$("gear").onclick = () => $("set").showModal();
+$("sLang").onchange = e => { P.lang = e.target.value; save(); applyLang(); if (st.list.length) run(false); };
+$("sTheme").onchange = e => { P.theme = e.target.value; save(); applyTheme(); };
+$("sCols").onchange = e => { P.cols = e.target.value; save(); document.documentElement.style.setProperty("--cols", P.cols); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+
+document.documentElement.style.setProperty("--cols", P.cols);
+applyTheme(); applyMode(); applyLang(); run(false);
 </script>
 </body>
 </html>
