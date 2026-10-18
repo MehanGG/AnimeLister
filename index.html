@@ -397,7 +397,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme
 
 
 // ---- Chat AI (hilang saat ditutup) ----
-let chatMsgs = [], CL = [], busy = false;
+let chatMsgs = [], CL = [], busy = false, shown = new Set();
 const cm = $("cmsgs");
 function addMsg(role, text){
   const d = document.createElement("div");
@@ -416,14 +416,23 @@ function openChat(){
 }
 function closeChat(){
   $("chat").hidden = true; $("fab").hidden = false;
-  chatMsgs = []; CL.length = 0; cm.innerHTML = ""; busy = false;
+  chatMsgs = []; CL.length = 0; shown = new Set(); cm.innerHTML = ""; busy = false;
 }
 async function resolveTitles(titles, kind){
-  const type = kind === "MANGA" ? "MANGA" : "ANIME";
-  const q = "{" + titles.map((x, i) => `a${i}:Media(search:${JSON.stringify(x)},type:${type},isAdult:false,sort:SEARCH_MATCH){${M} ${MC}}`).join(" ") + "}";
-  const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query:q})});
-  const j = await r.json().catch(() => ({})), seen = new Set();
-  return Object.values(j.data || {}).filter(m => m && !seen.has(m.id) && seen.add(m.id)).map(nm);
+  const type = kind === "MANGA" ? "MANGA" : "ANIME", found = [], seen = new Set();
+  for (let i = 0; i < titles.length; i += 6) {
+    const q = "{" + titles.slice(i, i + 6).map((x, k) => `a${k}:Media(search:${JSON.stringify(x)},type:${type},isAdult:false,sort:SEARCH_MATCH){${M} ${MC}}`).join(" ") + "}";
+    for (let n = 0; n < 2; n++) {
+      try {
+        const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query:q})});
+        if (r.status === 429) { await new Promise(s => setTimeout(s, 3000)); continue; }
+        const j = await r.json().catch(() => ({}));
+        Object.values(j.data || {}).forEach(m => { if (m && !seen.has(m.id)) { seen.add(m.id); found.push(m); } });
+      } catch (e) {}
+      break;
+    }
+  }
+  return found.map(nm);
 }
 async function sendChat(text){
   if (busy || !text) return;
@@ -434,15 +443,22 @@ async function sendChat(text){
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || "HTTP " + r.status);
     if ($("chat").hidden) return;
-    chatMsgs.push({role:"assistant", content:j.reply + (j.titles.length ? " [" + j.titles.join("; ") + "]" : "")});
+    chatMsgs.push({role:"assistant", content:JSON.stringify({reply:j.reply, kind:j.kind, titles:j.titles})});
     wait.textContent = j.reply || "";
     if (j.titles.length) {
       const items = await resolveTitles(j.titles, j.kind);
       if ($("chat").hidden) return;
-      if (items.length) {
-        const from = CL.length; CL.push(...items);
+      const fresh = items.filter(o => !shown.has(o.url));
+      fresh.forEach(o => shown.add(o.url));
+      if (!fresh.length) {
+        const n = document.createElement("div");
+        n.style.cssText = "font-size:.78rem;color:var(--mu);margin-top:6px";
+        n.textContent = (P.lang === "id" ? "Tidak ada judul baru yang bisa ditampilkan. Saran AI: " : "No new titles could be shown. AI suggested: ") + j.titles.join("; ");
+        wait.appendChild(n);
+      } else {
+        const from = CL.length; CL.push(...fresh);
         const g = document.createElement("div"); g.className = "grid cg";
-        g.innerHTML = cards(items, from, false).replaceAll('data-i="', 'data-c="');
+        g.innerHTML = cards(fresh, from, false).replaceAll('data-i="', 'data-c="');
         wait.appendChild(g);
       }
     }
