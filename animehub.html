@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AnimeHub</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f3fb;--surface:#fff;--ink:#241f3a;--muted:#6d6785;--accent:#e0406f;--line:#e4dcf0;--r:14px}
+@media (prefers-color-scheme:dark){:root{--bg:#14122b;--surface:#1f1c3d;--ink:#f1ecff;--muted:#a59fc4;--accent:#ff8fb1;--line:#322e5c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Maru Gothic",system-ui,sans-serif;line-height:1.5}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px}
+.bar{max-width:1100px;margin:auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+h1{margin:0;font-size:1.5rem;font-weight:900;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+form{flex:1;min-width:200px;display:flex;gap:6px}
+input{flex:1;padding:9px 14px;border-radius:99px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+button{font:inherit;cursor:pointer}
+form button{padding:9px 16px;border:0;border-radius:99px;background:var(--accent);color:#fff;font-weight:700}
+nav{max-width:1100px;margin:10px auto 0;display:flex;gap:6px;overflow-x:auto}
+nav button{white-space:nowrap;padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:none;color:var(--muted)}
+nav button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{max-width:1100px;margin:auto;padding:18px 16px 60px}
+h2{margin:0 0 14px;font-size:1.2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;color:inherit}
+.card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--line)}
+.card .t{padding:8px 10px 10px;font-size:.85rem;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .m{display:block;padding:0 10px 10px;font-size:.75rem;color:var(--muted);font-weight:400}
+.badge{position:absolute;top:8px;left:8px;background:var(--accent);color:#fff;font-weight:900;font-size:.8rem;padding:2px 9px;border-radius:99px}
+.score{position:absolute;top:8px;right:8px;background:rgba(20,18,43,.8);color:#ffd36b;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:99px}
+.msg{color:var(--muted);padding:30px 0;text-align:center}
+dialog{border:0;border-radius:var(--r);background:var(--surface);color:var(--ink);max-width:560px;width:92%;padding:0}
+dialog::backdrop{background:rgba(10,8,30,.6)}
+.dl{display:flex;gap:14px;padding:18px}
+.dl img{width:130px;border-radius:10px;align-self:flex-start}
+.dl h3{margin:0 0 6px}
+.dl p{font-size:.88rem;color:var(--muted);max-height:240px;overflow:auto;margin:8px 0}
+.dl a{color:var(--accent);font-weight:700}
+.x{float:right;margin:8px;background:none;border:0;color:var(--muted);font-size:1.3rem}
+@media(max-width:480px){.dl{flex-direction:column}.dl img{width:110px}}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:hover{transform:translateY(-3px)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>Anime<span>Hub</span></h1>
+    <form id="sf"><input id="q" type="search" placeholder="Cari anime, mis. Frieren" aria-label="Cari anime"><button>Cari</button></form>
+  </div>
+  <nav id="tabs">
+    <button data-t="pop" class="on">Anime populer</button>
+    <button data-t="rank">Ranking</button>
+    <button data-t="new">Baru rilis</button>
+    <button data-t="waifu">Daftar waifu</button>
+  </nav>
+</header>
+<main>
+  <h2 id="title"></h2>
+  <div id="out" class="grid"></div>
+</main>
+<dialog id="dlg"><button class="x" aria-label="Tutup" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
+
+<script>
+const API = "https://api.jikan.moe/v4";
+const $ = id => document.getElementById(id);
+const cache = {};
+const tabs = {
+  pop:   {title:"Anime populer",    url:"/top/anime?filter=bypopularity&limit=24", kind:"anime"},
+  rank:  {title:"Ranking anime (skor tertinggi)", url:"/top/anime?limit=24", kind:"anime", rank:true},
+  new:   {title:"Anime baru rilis (musim ini)", url:"/seasons/now?limit=24", kind:"anime"},
+  waifu: {title:"Karakter terpopuler (waifu & husbando)", url:"/top/characters?limit=24", kind:"char", rank:true}
+};
+let token = 0;
+
+async function get(path){
+  if (cache[path]) return cache[path];
+  const r = await fetch(API + path);
+  if (r.status === 429) { await new Promise(s => setTimeout(s, 1200)); return get(path); }
+  if (!r.ok) throw new Error("Gagal memuat data (" + r.status + ")");
+  const j = await r.json();
+  return cache[path] = j.data;
+}
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const img = o => o.images?.webp?.image_url || o.images?.jpg?.image_url || "";
+
+function card(o, i, cfg){
+  const isChar = cfg.kind === "char";
+  const name = isChar ? o.name : (o.title_english || o.title);
+  const meta = isChar ? (o.favorites?.toLocaleString("id-ID") + " favorit") : [o.type, o.year || o.aired?.prop?.from?.year, o.episodes ? o.episodes + " eps" : ""].filter(Boolean).join(" · ");
+  const badge = cfg.rank ? `<span class="badge">#${o.rank ?? i + 1}</span>` : "";
+  const score = !isChar && o.score ? `<span class="score">★ ${o.score}</span>` : "";
+  return `<button class="card" data-i="${i}">${badge}${score}<img loading="lazy" src="${esc(img(o))}" alt="${esc(name)}"><span class="t">${esc(name)}</span><span class="m">${esc(meta)}</span></button>`;
+}
+
+async function show(title, path, cfg){
+  const my = ++token;
+  $("title").textContent = title;
+  $("out").className = "";
+  $("out").innerHTML = '<p class="msg">Memuat…</p>';
+  try {
+    const data = await get(path);
+    if (my !== token) return;
+    const seen = new Set();
+    const list = data.filter(o => !seen.has(o.mal_id) && seen.add(o.mal_id));
+    if (!list.length) { $("out").innerHTML = '<p class="msg">Tidak ada hasil. Coba kata kunci lain.</p>'; return; }
+    $("out").className = "grid";
+    $("out").innerHTML = list.map((o, i) => card(o, i, cfg)).join("");
+    $("out").onclick = e => { const c = e.target.closest(".card"); if (c) detail(list[c.dataset.i], cfg); };
+  } catch (err) {
+    if (my === token) $("out").innerHTML = `<p class="msg">${esc(err.message)}. Cek koneksi lalu coba lagi.</p>`;
+  }
+}
+
+function detail(o, cfg){
+  const isChar = cfg.kind === "char";
+  const name = isChar ? o.name : (o.title_english || o.title);
+  const text = isChar ? (o.about || "Belum ada deskripsi.") : (o.synopsis || "Belum ada sinopsis.");
+  const info = isChar
+    ? `${esc(o.name_kanji || "")}`
+    : `★ ${o.score ?? "-"} · Peringkat #${o.rank ?? "-"} · ${esc((o.genres || []).map(g => g.name).join(", "))}`;
+  $("dbody").innerHTML = `<img src="${esc(img(o))}" alt=""><div><h3>${esc(name)}</h3><div>${info}</div><p>${esc(text)}</p><a href="${esc(o.url)}" target="_blank" rel="noopener">Buka di MyAnimeList</a></div>`;
+  $("dlg").showModal();
+}
+
+function tab(t){
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  const c = tabs[t];
+  show(c.title, c.url, c);
+}
+
+$("tabs").onclick = e => { const b = e.target.closest("button"); if (b) tab(b.dataset.t); };
+$("sf").onsubmit = e => {
+  e.preventDefault();
+  const q = $("q").value.trim();
+  if (!q) return;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("on"));
+  show('Hasil pencarian: "' + q + '"', "/anime?sfw=true&limit=24&q=" + encodeURIComponent(q), {kind:"anime"});
+};
+tab("pop");
+</script>
+</body>
+</html>
