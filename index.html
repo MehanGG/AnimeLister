@@ -80,7 +80,7 @@ function season(){
   if (m >= 8 && m <= 10) return ["FALL", y];
   return ["WINTER", m === 11 ? y + 1 : y];
 }
-const mediaQ = args => `query($s:String){Page(perPage:24){media(type:ANIME,isAdult:false,${args}){${M}}}}`;
+const mediaQ = args => `query${args.includes("$s") ? "($s:String)" : ""}{Page(perPage:24){media(type:ANIME,isAdult:false,${args}){${M}}}}`;
 const [SN, SY] = season();
 
 const tabs = {
