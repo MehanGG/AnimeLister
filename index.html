@@ -22,6 +22,19 @@ summary::before{content:"▸ "}details[open]>summary::before{content:"▾ "}
 input:focus{border-color:var(--ac)}
 body{-webkit-touch-callout:none;overscroll-behavior:none}
 .card,.chip,.gb,.ddb,.ddo,nav button,.seg button,.ic,.x{-webkit-user-select:none;user-select:none}
+[hidden]{display:none!important}
+.fab{position:fixed;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;background:var(--ac);color:#fff;z-index:40;display:grid;place-items:center;box-shadow:0 8px 24px rgba(37,99,235,.45)}
+#chat{position:fixed;right:12px;bottom:12px;width:min(400px,calc(100vw - 24px));height:min(640px,calc(100dvh - 24px));background:var(--sf);border:1px solid var(--ln);border-radius:18px;z-index:50;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(5,10,30,.4)}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--ac);color:#fff;font-weight:800}
+.ch button{color:#fff;font-size:1.4rem;line-height:1}
+#cmsgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.mb{padding:9px 12px;border-radius:14px;font-size:.88rem;white-space:pre-wrap;word-break:break-word}
+.mb.u{align-self:flex-end;max-width:88%;background:var(--ac);color:#fff;border-bottom-right-radius:4px}
+.mb.a{align-self:flex-start;max-width:100%;background:var(--ac2);border-bottom-left-radius:4px}
+.cg{--cols:3;margin-top:8px;white-space:normal}
+.cg .card .t{font-size:.72rem}
+#cf{display:flex;gap:6px;padding:10px;border-top:1px solid var(--ln)}
+#cf input{flex:1;min-width:0;border-radius:99px}
 .dd{position:relative;display:inline-block}
 .ddb{display:flex;gap:8px;align-items:center;padding:8px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);font-size:.88rem;font-weight:600}
 .ddb i{font-style:normal;color:var(--mu);font-size:.7rem}
@@ -99,6 +112,12 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
   <button id="more" class="pri" data-i="more"></button>
 </main>
 
+<button class="fab" id="fab" aria-label="AI"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg></button>
+<section id="chat" hidden>
+  <div class="ch"><span data-i="chatT"></span><button id="cx" aria-label="Close">×</button></div>
+  <div id="cmsgs"></div>
+  <form id="cf"><input id="cq" autocomplete="off" maxlength="300"><button class="pri" data-i="chatSend"></button></form>
+</section>
 <dialog id="dlg"><button class="x" aria-label="Close" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
 <dialog id="set"><button class="x" aria-label="Close" onclick="set.close()">×</button><h3 data-i="set"></h3><div id="setBody"></div></dialog>
 
@@ -115,10 +134,10 @@ const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
@@ -313,7 +332,7 @@ function go(tab){
 function applyLang(){
   document.documentElement.lang = P.lang;
   document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
-  $("q").placeholder = t("ph");
+  $("q").placeholder = t("ph"); $("cq").placeholder = t("chatPh");
   renderSet();
   renderTabs(); renderTitle(); renderCtl();
 }
@@ -361,9 +380,8 @@ async function tr(text){
   const res = out.join("\n\n"); TR.set(text, res); return res;
 }
 let dTok = 0;
-$("out").onclick = e => {
-  const c = e.target.closest(".card"); if (!c) return;
-  const o = st.list[c.dataset.i], my = ++dTok;
+function openDetail(o){
+  const my = ++dTok;
   $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3>${jpl(o) ? `<div style="color:var(--mu);font-size:.85rem;margin-bottom:4px">${esc(jpl(o))}</div>` : ""}<div style="font-size:.85rem">${esc(o.info)}</div>${o.mcl ? `<div style="font-size:.85rem;margin-top:8px"><b>Main Character:</b> ${esc(o.mcl)}</div>` : ""}<p id="dtx">${esc(o.text)}</p><div id="dnote" style="font-size:.72rem;color:var(--mu);margin-bottom:6px"></div><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
   $("dlg").showModal();
   if (P.lang === "id" && o.text !== L.id.nod && o.text !== L.en.nod) {
@@ -371,10 +389,73 @@ $("out").onclick = e => {
     tr(o.text).then(x => { if (my === dTok) { $("dtx").textContent = x; $("dnote").textContent = t("trn"); } })
       .catch(() => { if (my === dTok) $("dnote").textContent = t("trf"); });
   }
-};
+}
+$("out").onclick = e => { const c = e.target.closest(".card"); if (c) openDetail(st.list[c.dataset.i]); };
 $("more").onclick = () => run(true);
 $("gear").onclick = () => $("set").showModal();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+
+
+// ---- Chat AI (hilang saat ditutup) ----
+let chatMsgs = [], CL = [], busy = false;
+const cm = $("cmsgs");
+function addMsg(role, text){
+  const d = document.createElement("div");
+  d.className = "mb " + (role === "user" ? "u" : "a");
+  d.textContent = text;
+  cm.appendChild(d); cm.scrollTop = cm.scrollHeight;
+  return d;
+}
+function openChat(){
+  $("chat").hidden = false; $("fab").hidden = true;
+  const d = addMsg("ai", t("chatHi"));
+  const row = document.createElement("div"); row.className = "row"; row.style.marginTop = "8px";
+  row.innerHTML = t("chips").map(c => `<button class="chip" data-s="${esc(c)}">${esc(c)}</button>`).join("");
+  d.appendChild(row);
+  $("cq").focus();
+}
+function closeChat(){
+  $("chat").hidden = true; $("fab").hidden = false;
+  chatMsgs = []; CL.length = 0; cm.innerHTML = ""; busy = false;
+}
+async function resolveTitles(titles, kind){
+  const type = kind === "MANGA" ? "MANGA" : "ANIME";
+  const q = "{" + titles.map((x, i) => `a${i}:Media(search:${JSON.stringify(x)},type:${type},isAdult:false,sort:SEARCH_MATCH){${M} ${MC}}`).join(" ") + "}";
+  const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query:q})});
+  const j = await r.json().catch(() => ({})), seen = new Set();
+  return Object.values(j.data || {}).filter(m => m && !seen.has(m.id) && seen.add(m.id)).map(nm);
+}
+async function sendChat(text){
+  if (busy || !text) return;
+  busy = true; addMsg("user", text); chatMsgs.push({role:"user", content:text});
+  const wait = addMsg("ai", "…");
+  try {
+    const r = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({messages:chatMsgs, lang:P.lang, mode:P.mode})});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || "HTTP " + r.status);
+    if ($("chat").hidden) return;
+    chatMsgs.push({role:"assistant", content:j.reply + (j.titles.length ? " [" + j.titles.join("; ") + "]" : "")});
+    wait.textContent = j.reply || "";
+    if (j.titles.length) {
+      const items = await resolveTitles(j.titles, j.kind);
+      if ($("chat").hidden) return;
+      if (items.length) {
+        const from = CL.length; CL.push(...items);
+        const g = document.createElement("div"); g.className = "grid cg";
+        g.innerHTML = cards(items, from, false).replaceAll('data-i="', 'data-c="');
+        wait.appendChild(g);
+      }
+    }
+  } catch (e) { if (!$("chat").hidden) wait.textContent = t("chatErr") + " (" + e.message + ")"; }
+  finally { busy = false; cm.scrollTop = cm.scrollHeight; }
+}
+$("fab").onclick = openChat;
+$("cx").onclick = closeChat;
+$("cf").onsubmit = e => { e.preventDefault(); const v = $("cq").value.trim(); $("cq").value = ""; sendChat(v); };
+cm.onclick = e => {
+  const c = e.target.closest(".card"), h = e.target.closest("[data-s]");
+  if (c) openDetail(CL[c.dataset.c]); else if (h) sendChat(h.dataset.s);
+};
 
 document.documentElement.style.setProperty("--cols", P.cols);
 applyTheme(); applyMode(); applyLang(); run(false);
