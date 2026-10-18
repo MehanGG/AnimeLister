@@ -92,7 +92,7 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
 const API = "https://graphql.anilist.co";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const clean = s => (s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/~!|!~/g, "");
+const clean = s => (s || "").replace(/__|\*\*/g, "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/~!|!~/g, "");
 const GEN = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror","Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi","Slice of Life","Sports","Supernatural","Thriller"];
 let ALL = null, tagP = null;
 const GSET = new Set();
@@ -101,10 +101,10 @@ const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
@@ -113,7 +113,7 @@ const t = k => L[P.lang][k] ?? k;
 const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:""};
 let st = {list:[], page:1, more:false, b:null}, token = 0;
 
-const M = "id title{romaji english} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
+const M = "id title{romaji english native} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
 const C = "id name{full native} image{large} gender favourites description(asHtml:false) siteUrl media(perPage:1,sort:POPULARITY_DESC){nodes{title{romaji}}}";
 const d0 = new Date(), mo = d0.getMonth();
 const [SN, SY] = mo < 2 ? ["WINTER", d0.getFullYear()] : mo < 5 ? ["SPRING", d0.getFullYear()] : mo < 8 ? ["SUMMER", d0.getFullYear()] : mo < 11 ? ["FALL", d0.getFullYear()] : ["WINTER", d0.getFullYear() + 1];
@@ -132,9 +132,10 @@ async function gql(query, tries = 0){
   return j.data;
 }
 
+const jpl = o => [o.jp, o.ro].filter(Boolean).join(" · ");
 const nm = m => {
   const sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "";
-  return {name:m.title.english || m.title.romaji, img:m.coverImage.large, score:sc,
+  return {name:m.title.english || m.title.romaji, jp:m.title.native || "", ro:m.title.romaji && m.title.romaji !== (m.title.english || m.title.romaji) ? m.title.romaji : "", img:m.coverImage.large, score:sc,
     meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
     info:["★ " + (sc || "-"), t("st")[m.status] || "", (m.genres || []).join(", ")].filter(Boolean).join(" · "),
     text:clean(m.description) || t("nod"), url:m.siteUrl};
@@ -173,7 +174,7 @@ function builder(){
 
 function norm(data, kind){
   if (kind === "char") return {more:data.Page.pageInfo.hasNextPage, items:data.Page.characters.filter(c => c.gender === "Female").map(c => ({
-    name:c.name.full, img:c.image.large, score:"", meta:(c.favorites || 0).toLocaleString(P.lang) + " " + t("fav") + (c.media.nodes[0] ? " · " + c.media.nodes[0].title.romaji : ""),
+    name:c.name.full, jp:c.name.native || "", img:c.image.large, score:"", meta:(c.favorites || 0).toLocaleString(P.lang) + " " + t("fav") + (c.media.nodes[0] ? " · " + c.media.nodes[0].title.romaji : ""),
     info:c.name.native || "", text:clean(c.description) || t("nod"), url:c.siteUrl}))};
   if (kind === "sched") {
     const seen = new Set(), out = [];
@@ -193,7 +194,7 @@ function norm(data, kind){
 function cards(items, from, rank){
   return items.map((o, i) => {
     const n = from + i, b = o.badge ? `<span class="bd">${esc(o.badge)}</span>` : rank ? `<span class="bd">#${n + 1}</span>` : "";
-    return `<button class="card" data-i="${n}"><span class="im">${b}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span><span class="m">${esc(o.meta)}</span></button>`;
+    return `<button class="card" data-i="${n}"><span class="im">${b}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span>${jpl(o) ? `<span class="m">${esc(jpl(o))}</span>` : ""}<span class="m">${esc(o.meta)}</span></button>`;
   }).join("");
 }
 
@@ -297,11 +298,34 @@ $("ctl").onchange = e => {
   else if (e.target.id === "fS") S.sort = e.target.value; else return;
   run(false);
 };
+const TR = new Map();
+async function tr(text){
+  if (TR.has(text)) return TR.get(text);
+  const chunks = []; let cur = "";
+  for (const p of text.split(/\n+/).filter(Boolean)) {
+    if (cur && (cur + "\n" + p).length > 1800) { chunks.push(cur); cur = p; } else cur = cur ? cur + "\n" + p : p;
+  }
+  if (cur) chunks.push(cur);
+  const out = [];
+  for (const c of chunks) {
+    const r = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=id&dt=t&q=" + encodeURIComponent(c), {signal:AbortSignal.timeout(15000)});
+    if (!r.ok) throw new Error("tr");
+    const j = await r.json();
+    out.push(j[0].map(x => x[0]).join(""));
+  }
+  const res = out.join("\n\n"); TR.set(text, res); return res;
+}
+let dTok = 0;
 $("out").onclick = e => {
   const c = e.target.closest(".card"); if (!c) return;
-  const o = st.list[c.dataset.i];
-  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3><div style="font-size:.85rem">${esc(o.info)}</div><p>${esc(o.text)}</p><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
+  const o = st.list[c.dataset.i], my = ++dTok;
+  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3>${jpl(o) ? `<div style="color:var(--mu);font-size:.85rem;margin-bottom:4px">${esc(jpl(o))}</div>` : ""}<div style="font-size:.85rem">${esc(o.info)}</div><p id="dtx">${esc(o.text)}</p><div id="dnote" style="font-size:.72rem;color:var(--mu);margin-bottom:6px"></div><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
   $("dlg").showModal();
+  if (P.lang === "id" && o.text !== L.id.nod && o.text !== L.en.nod) {
+    $("dnote").textContent = t("load");
+    tr(o.text).then(x => { if (my === dTok) { $("dtx").textContent = x; $("dnote").textContent = t("trn"); } })
+      .catch(() => { if (my === dTok) $("dnote").textContent = t("trf"); });
+  }
 };
 $("more").onclick = () => run(true);
 $("gear").onclick = () => $("set").showModal();
