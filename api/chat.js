@@ -21,7 +21,8 @@ Answer with ONE valid JSON object only (no markdown, no text outside it): {"repl
 - "reply": 1-3 short friendly sentences. Do not list the titles inside it, they are shown as cards under your message.
 - "titles": when the user asks for recommendations or names specific works, up to 20 exact official titles (romaji or English, as on AniList), best match first. If the user asks for N titles, give N (max 20), but accuracy beats quantity: give fewer rather than padding with poor matches. Otherwise [].
 - "kind": what the titles are (default ${mode}).
-Before including a title, check it against EVERY detail in the request (premise, protagonist gender, power level, setting, genre, year, etc.) and drop any that do not clearly fit. Only include works that really exist. Never recommend adult or hentai titles.`;
+Before including a title, check it against EVERY detail in the request (premise, protagonist gender, power level, setting, genre, year, etc.) and drop any that do not clearly fit. Only include works that really exist. Never recommend adult or hentai titles.
+The conversation history shows your earlier JSON answers. If the user asks for more, others or different ones ("yang lain", "more"), keep all their earlier constraints and do NOT repeat any title you already gave.`;
 
   let model = (process.env.GROQ_MODEL || "llama-3.3-70b-versatile").trim();
   if (/^gpt-oss/.test(model)) model = "openai/" + model; // terima "gpt-oss-120b" tanpa awalan
