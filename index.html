@@ -64,7 +64,7 @@ dialog::backdrop{background:rgba(10,8,30,.6)}
 <dialog id="dlg"><button class="x" aria-label="Tutup" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
 
 <script>
-const API = "https://api.jikan.moe/v4";
+const API = location.protocol.startsWith("http") ? "/jikan" : "https://api.jikan.moe/v4";
 const $ = id => document.getElementById(id);
 const cache = {};
 const tabs = {
@@ -75,11 +75,16 @@ const tabs = {
 };
 let token = 0;
 
-async function get(path){
+async function get(path, tries = 0){
   if (cache[path]) return cache[path];
-  const r = await fetch(API + path);
-  if (r.status === 429) { await new Promise(s => setTimeout(s, 1200)); return get(path); }
-  if (!r.ok) throw new Error("Gagal memuat data (" + r.status + ")");
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 10000);
+  let r;
+  try { r = await fetch(API + path, {signal: ctl.signal}); }
+  catch (e) { throw new Error(e.name === "AbortError" ? "Server Jikan tidak merespons (timeout)" : "Tidak bisa terhubung ke server data"); }
+  finally { clearTimeout(timer); }
+  if ((r.status === 429 || r.status >= 500) && tries < 3) { await new Promise(s => setTimeout(s, 1500)); return get(path, tries + 1); }
+  if (!r.ok) throw new Error("Gagal memuat data (kode " + r.status + ")");
   const j = await r.json();
   return cache[path] = j.data;
 }
@@ -111,7 +116,12 @@ async function show(title, path, cfg){
     $("out").innerHTML = list.map((o, i) => card(o, i, cfg)).join("");
     $("out").onclick = e => { const c = e.target.closest(".card"); if (c) detail(list[c.dataset.i], cfg); };
   } catch (err) {
-    if (my === token) $("out").innerHTML = `<p class="msg">${esc(err.message)}. Cek koneksi lalu coba lagi.</p>`;
+    if (my === token) {
+      $("out").className = "";
+      $("out").onclick = null;
+      $("out").innerHTML = `<p class="msg">${esc(err.message)}.<br>Pastikan file dibuka lewat browser (Chrome/Safari) dan internet aktif.<br><br><button id="retry" style="padding:8px 16px;border-radius:99px;border:0;background:var(--accent);color:#fff;font-weight:700">Coba lagi</button></p>`;
+      $("retry").onclick = () => show(title, path, cfg);
+    }
   }
 }
 
