@@ -1,5 +1,1 @@
-{
-  "rewrites": [
-    { "source": "/jikan/:path*", "destination": "https://api.jikan.moe/v4/:path*" }
-  ]
-}
+{"functions":{"api/chat.js":{"maxDuration":60}}}
