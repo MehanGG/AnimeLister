@@ -54,6 +54,10 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
 .dl a{color:var(--ac);font-weight:700}
 .x{float:right;font-size:1.4rem;color:var(--mu);margin:-6px -2px 0 8px}
 .fld{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.gl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:52vh;overflow:auto;padding-right:2px}
+@media(min-width:700px){.gl{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.gb{padding:13px 14px;border-radius:12px;text-align:left;font-weight:700;font-size:.86rem;background:var(--sf);border:1px solid var(--ln);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gb.on{background:var(--ac);border-color:var(--ac);color:#fff}
 @media(max-width:560px){.grid{gap:8px}.dl{flex-direction:column}.dl img{width:100px}}
 @media(hover:hover){.card:hover .im{box-shadow:0 0 0 2px var(--ac)}}
 </style>
@@ -90,13 +94,15 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const clean = s => (s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/~!|!~/g, "");
 const GEN = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror","Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi","Slice of Life","Sports","Supernatural","Thriller"];
+let ALL = null, tagP = null;
+const GSET = new Set();
 const SORTS = [["POPULARITY_DESC","s1"],["POPULARITY","s2"],["START_DATE_DESC","s3"],["START_DATE","s4"],["SCORE_DESC","s5"],["SCORE","s6"]];
 const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
 const L = {
-  id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Pilih genre (bisa lebih dari satu)",open:"Buka di AniList",res:"Hasil",
+  id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
     st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
-  en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Pick genres (multiple allowed)",open:"Open on AniList",res:"Results",
+  en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
     st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
@@ -136,7 +142,9 @@ const nm = m => {
 
 function filt(extra){
   const a = [];
-  if (S.genres.length) a.push("genre_in:" + JSON.stringify(S.genres));
+  const gs = S.genres.filter(n => GSET.has(n)), ts = S.genres.filter(n => !GSET.has(n));
+  if (gs.length) a.push("genre_in:" + JSON.stringify(gs));
+  if (ts.length) a.push("tag_in:" + JSON.stringify(ts));
   if (S.year) a.push(`startDate_greater:${S.year * 10000},startDate_lesser:${(+S.year + 1) * 10000}`);
   if (extra) a.push(extra);
   if (S.sort.startsWith("START")) a.push("status_not:NOT_YET_RELEASED");
@@ -223,13 +231,29 @@ function renderCtl(){
   if (k === "sched") {
     c.innerHTML = `<div class="row">${[1,2,3,4,5,6,0].map(w => `<button class="chip ${S.wd === w ? "on" : ""}" data-w="${w}">${new Date(2025, 0, 5 + w).toLocaleDateString(P.lang === "id" ? "id-ID" : "en-US", {weekday:"long"})}</button>`).join("")}</div>`;
   } else if (k === "rec" || k === "genre") {
+    if (!ALL) { c.innerHTML = `<p class="msg">${t("load")}</p>`; tagP = tagP || loadTags(); return; }
     const yr = new Date().getFullYear() + 1;
     let yo = `<option value="">${t("year")}</option>`;
     for (let y = yr; y >= 1970; y--) yo += `<option ${S.year == y ? "selected" : ""}>${y}</option>`;
     c.innerHTML = (k === "rec" ? `<div style="color:var(--mu);font-size:.85rem">${t("hint")}</div>` : "") +
-      `<details ${S.genres.length || k === "genre" ? "open" : ""}><summary>${t("genres")}${S.genres.length ? " (" + S.genres.length + ")" : ""}</summary><div class="row">${GEN.map(g => `<button class="chip ${S.genres.includes(g) ? "on" : ""}" data-g="${esc(g)}">${esc(g)}</button>`).join("")}</div></details>` +
+      `<details ${S.genres.length || k === "genre" ? "open" : ""}><summary>${t("genres")} <span id="gc"></span></summary><input id="gq" type="search" placeholder="${t("gs")}" style="width:100%;margin-bottom:8px"><div class="gl" id="gl"></div></details>` +
       `<div class="row"><select id="fY">${yo}</select><select id="fS">${SORTS.map(([v, l]) => `<option value="${v}" ${S.sort === v ? "selected" : ""}>${t(l)}</option>`).join("")}</select><button class="chip" id="fR">${t("reset")}</button></div>`;
+    fillGl();
   } else c.innerHTML = "";
+}
+function fillGl(){
+  const q = ($("gq").value || "").toLowerCase();
+  $("gl").innerHTML = ALL.filter(n => n.toLowerCase().includes(q)).map(n => `<button class="gb ${S.genres.includes(n) ? "on" : ""}" data-g="${esc(n)}">${esc(n)}</button>`).join("");
+  $("gc").textContent = S.genres.length ? "(" + S.genres.length + ")" : "";
+}
+async function loadTags(){
+  try {
+    const d = await gql("{GenreCollection MediaTagCollection{name isAdult}}");
+    d.GenreCollection.filter(g => g !== "Hentai").forEach(g => GSET.add(g));
+    ALL = [...new Set([...GSET, ...d.MediaTagCollection.filter(x => !x.isAdult).map(x => x.name)])].sort((a, b) => a.localeCompare(b));
+  } catch (e) { GEN.forEach(g => GSET.add(g)); ALL = [...GEN]; }
+  tagP = null;
+  if (S.tab === "rec" || S.tab === "genre") renderCtl();
 }
 function go(tab){
   S.tab = tab;
@@ -263,10 +287,11 @@ $("sf").onsubmit = e => {
 };
 $("ctl").onclick = e => {
   const g = e.target.closest("[data-g]"), w = e.target.closest("[data-w]");
-  if (g) { const v = g.dataset.g, i = S.genres.indexOf(v); i < 0 ? S.genres.push(v) : S.genres.splice(i, 1); renderCtl(); run(false); }
+  if (g) { const v = g.dataset.g, i = S.genres.indexOf(v); i < 0 ? S.genres.push(v) : S.genres.splice(i, 1); fillGl(); run(false); }
   else if (w) { S.wd = +w.dataset.w; renderCtl(); run(false); }
   else if (e.target.id === "fR") { S.genres = []; S.year = ""; S.sort = S.tab === "rec" ? "SCORE_DESC" : "POPULARITY_DESC"; renderCtl(); run(false); }
 };
+$("ctl").oninput = e => { if (e.target.id === "gq") fillGl(); };
 $("ctl").onchange = e => {
   if (e.target.id === "fY") S.year = e.target.value;
   else if (e.target.id === "fS") S.sort = e.target.value; else return;
