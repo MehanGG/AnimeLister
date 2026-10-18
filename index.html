@@ -64,82 +64,100 @@ dialog::backdrop{background:rgba(10,8,30,.6)}
 <dialog id="dlg"><button class="x" aria-label="Tutup" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
 
 <script>
-const API = location.protocol.startsWith("http") ? "/jikan" : "https://api.jikan.moe/v4";
+const API = "https://graphql.anilist.co";
 const $ = id => document.getElementById(id);
 const cache = {};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const clean = s => (s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/~!|!~/g, "");
+
+const M = "id title{romaji english} coverImage{large} averageScore popularity format episodes seasonYear genres description(asHtml:false) siteUrl";
+const C = "id name{full native} image{large} gender favourites description(asHtml:false) siteUrl media(perPage:1,sort:POPULARITY_DESC){nodes{title{romaji}}}";
+
+function season(){
+  const d = new Date(), m = d.getMonth(), y = d.getFullYear();
+  if (m >= 2 && m <= 4) return ["SPRING", y];
+  if (m >= 5 && m <= 7) return ["SUMMER", y];
+  if (m >= 8 && m <= 10) return ["FALL", y];
+  return ["WINTER", m === 11 ? y + 1 : y];
+}
+const mediaQ = args => `query($s:String){Page(perPage:24){media(type:ANIME,isAdult:false,${args}){${M}}}}`;
+const [SN, SY] = season();
+
 const tabs = {
-  pop:   {title:"Anime populer",    url:"/top/anime?filter=bypopularity&limit=24", kind:"anime"},
-  rank:  {title:"Ranking anime (skor tertinggi)", url:"/top/anime?limit=24", kind:"anime", rank:true},
-  new:   {title:"Anime baru rilis (musim ini)", url:"/seasons/now?limit=24", kind:"anime"},
-  waifu: {title:"Karakter terpopuler (waifu & husbando)", url:"/top/characters?limit=24", kind:"char", rank:true}
+  pop:   {title:"Anime populer", q:mediaQ("sort:POPULARITY_DESC"), kind:"anime"},
+  rank:  {title:"Ranking anime (skor tertinggi)", q:mediaQ("sort:SCORE_DESC"), kind:"anime", rank:true},
+  new:   {title:"Anime baru rilis (musim ini)", q:mediaQ(`season:${SN},seasonYear:${SY},sort:POPULARITY_DESC`), kind:"anime"},
+  waifu: {title:"Daftar waifu terpopuler", q:`query{a:Page(page:1,perPage:50){characters(sort:FAVOURITES_DESC){${C}}} b:Page(page:2,perPage:50){characters(sort:FAVOURITES_DESC){${C}}}}`, kind:"char", rank:true}
 };
 let token = 0;
 
-async function get(path, tries = 0){
-  if (cache[path]) return cache[path];
+async function gql(query, variables, tries = 0){
+  const key = query + JSON.stringify(variables || {});
+  if (cache[key]) return cache[key];
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 10000);
+  const timer = setTimeout(() => ctl.abort(), 30000);
   let r;
-  try { r = await fetch(API + path, {signal: ctl.signal}); }
-  catch (e) { throw new Error(e.name === "AbortError" ? "Server Jikan tidak merespons (timeout)" : "Tidak bisa terhubung ke server data"); }
+  try {
+    r = await fetch(API, {method:"POST", signal:ctl.signal, headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query, variables})});
+  } catch (e) { throw new Error(e.name === "AbortError" ? "Server AniList tidak merespons (timeout)" : "Tidak bisa terhubung ke graphql.anilist.co"); }
   finally { clearTimeout(timer); }
-  if ((r.status === 429 || r.status >= 500) && tries < 3) { await new Promise(s => setTimeout(s, 1500)); return get(path, tries + 1); }
-  if (!r.ok) throw new Error("Gagal memuat data (kode " + r.status + ")");
-  const j = await r.json();
-  return cache[path] = j.data;
+  if (r.status === 429 && tries < 3) {
+    await new Promise(s => setTimeout(s, (+r.headers.get("Retry-After") || 5) * 1000));
+    return gql(query, variables, tries + 1);
+  }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.errors) throw new Error("AniList menolak permintaan (kode " + r.status + ")");
+  return cache[key] = j.data;
 }
 
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const img = o => o.images?.webp?.image_url || o.images?.jpg?.image_url || "";
+function norm(data, cfg){
+  if (cfg.kind === "char") {
+    const all = [...data.a.characters, ...data.b.characters].filter(c => c.gender === "Female").slice(0, 24);
+    return all.map(c => ({name:c.name.full, img:c.image.large, meta:(c.favorites || 0).toLocaleString("id-ID") + " favorit" + (c.media.nodes[0] ? " · " + c.media.nodes[0].title.romaji : ""),
+      info:c.name.native || "", text:clean(c.description) || "Belum ada deskripsi.", url:c.siteUrl}));
+  }
+  return data.Page.media.map(m => ({name:m.title.english || m.title.romaji, img:m.coverImage.large,
+    score:m.averageScore ? (m.averageScore / 10).toFixed(1) : "",
+    meta:[m.format, m.seasonYear, m.episodes ? m.episodes + " eps" : ""].filter(Boolean).join(" · "),
+    info:"★ " + (m.averageScore ? (m.averageScore / 10).toFixed(1) : "-") + " · " + (m.genres || []).join(", "),
+    text:clean(m.description) || "Belum ada sinopsis.", url:m.siteUrl}));
+}
 
 function card(o, i, cfg){
-  const isChar = cfg.kind === "char";
-  const name = isChar ? o.name : (o.title_english || o.title);
-  const meta = isChar ? (o.favorites?.toLocaleString("id-ID") + " favorit") : [o.type, o.year || o.aired?.prop?.from?.year, o.episodes ? o.episodes + " eps" : ""].filter(Boolean).join(" · ");
-  const badge = cfg.rank ? `<span class="badge">#${o.rank ?? i + 1}</span>` : "";
-  const score = !isChar && o.score ? `<span class="score">★ ${o.score}</span>` : "";
-  return `<button class="card" data-i="${i}">${badge}${score}<img loading="lazy" src="${esc(img(o))}" alt="${esc(name)}"><span class="t">${esc(name)}</span><span class="m">${esc(meta)}</span></button>`;
+  const badge = cfg.rank ? `<span class="badge">#${i + 1}</span>` : "";
+  const score = o.score ? `<span class="score">★ ${o.score}</span>` : "";
+  return `<button class="card" data-i="${i}">${badge}${score}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"><span class="t">${esc(o.name)}</span><span class="m">${esc(o.meta)}</span></button>`;
 }
 
-async function show(title, path, cfg){
+async function show(title, query, vars, cfg){
   const my = ++token;
   $("title").textContent = title;
   $("out").className = "";
+  $("out").onclick = null;
   $("out").innerHTML = '<p class="msg">Memuat…</p>';
   try {
-    const data = await get(path);
+    const list = norm(await gql(query, vars), cfg);
     if (my !== token) return;
-    const seen = new Set();
-    const list = data.filter(o => !seen.has(o.mal_id) && seen.add(o.mal_id));
     if (!list.length) { $("out").innerHTML = '<p class="msg">Tidak ada hasil. Coba kata kunci lain.</p>'; return; }
     $("out").className = "grid";
     $("out").innerHTML = list.map((o, i) => card(o, i, cfg)).join("");
-    $("out").onclick = e => { const c = e.target.closest(".card"); if (c) detail(list[c.dataset.i], cfg); };
+    $("out").onclick = e => { const c = e.target.closest(".card"); if (c) detail(list[c.dataset.i]); };
   } catch (err) {
-    if (my === token) {
-      $("out").className = "";
-      $("out").onclick = null;
-      $("out").innerHTML = `<p class="msg">${esc(err.message)}.<br>Pastikan file dibuka lewat browser (Chrome/Safari) dan internet aktif.<br><br><button id="retry" style="padding:8px 16px;border-radius:99px;border:0;background:var(--accent);color:#fff;font-weight:700">Coba lagi</button></p>`;
-      $("retry").onclick = () => show(title, path, cfg);
-    }
+    if (my !== token) return;
+    $("out").innerHTML = `<p class="msg">${esc(err.message)}.<br><br><button id="retry" style="padding:8px 16px;border-radius:99px;border:0;background:var(--accent);color:#fff;font-weight:700">Coba lagi</button></p>`;
+    $("retry").onclick = () => show(title, query, vars, cfg);
   }
 }
 
-function detail(o, cfg){
-  const isChar = cfg.kind === "char";
-  const name = isChar ? o.name : (o.title_english || o.title);
-  const text = isChar ? (o.about || "Belum ada deskripsi.") : (o.synopsis || "Belum ada sinopsis.");
-  const info = isChar
-    ? `${esc(o.name_kanji || "")}`
-    : `★ ${o.score ?? "-"} · Peringkat #${o.rank ?? "-"} · ${esc((o.genres || []).map(g => g.name).join(", "))}`;
-  $("dbody").innerHTML = `<img src="${esc(img(o))}" alt=""><div><h3>${esc(name)}</h3><div>${info}</div><p>${esc(text)}</p><a href="${esc(o.url)}" target="_blank" rel="noopener">Buka di MyAnimeList</a></div>`;
+function detail(o){
+  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3><div>${esc(o.info)}</div><p style="white-space:pre-line">${esc(o.text)}</p><a href="${esc(o.url)}" target="_blank" rel="noopener">Buka di AniList</a></div>`;
   $("dlg").showModal();
 }
 
 function tab(t){
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
   const c = tabs[t];
-  show(c.title, c.url, c);
+  show(c.title, c.q, {}, c);
 }
 
 $("tabs").onclick = e => { const b = e.target.closest("button"); if (b) tab(b.dataset.t); };
@@ -148,7 +166,7 @@ $("sf").onsubmit = e => {
   const q = $("q").value.trim();
   if (!q) return;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("on"));
-  show('Hasil pencarian: "' + q + '"', "/anime?sfw=true&limit=24&q=" + encodeURIComponent(q), {kind:"anime"});
+  show('Hasil pencarian: "' + q + '"', mediaQ("search:$s,sort:SEARCH_MATCH"), {s:q}, {kind:"anime"});
 };
 tab("pop");
 </script>
