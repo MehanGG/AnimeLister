@@ -22,15 +22,20 @@ Answer with ONE JSON object only: {"reply": string, "kind": "ANIME" or "MANGA", 
 - "kind": what the titles are (default ${mode}).
 Only include works that really exist. Never recommend adult or hentai titles.`;
 
+  let model = (process.env.GROQ_MODEL || "llama-3.3-70b-versatile").trim();
+  if (/^gpt-oss/.test(model)) model = "openai/" + model; // terima "gpt-oss-120b" tanpa awalan
+  const oss = model.includes("gpt-oss");
+
   try {
     const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+        model: model,
         messages: [{ role: "system", content: system }, ...msgs],
         temperature: 0.6,
-        max_tokens: 900,
+        max_tokens: oss ? 2500 : 900,
+        ...(oss ? { reasoning_effort: "low" } : {}),
         response_format: { type: "json_object" }
       })
     });
