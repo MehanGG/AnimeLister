@@ -115,16 +115,16 @@ const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
 const save = () => { try { localStorage.setItem("aml", JSON.stringify(P)); } catch (e) {} };
 const t = k => L[P.lang][k] ?? k;
-const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:"", done:false};
+const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:"", done:false, mc:""};
 let st = {list:[], page:1, more:false, b:null}, token = 0;
 
 const M = "id title{romaji english native} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
@@ -132,7 +132,8 @@ const C = "id name{full native} image{large} gender favourites description(asHtm
 const d0 = new Date(), mo = d0.getMonth();
 const [SN, SY] = mo < 2 ? ["WINTER", d0.getFullYear()] : mo < 5 ? ["SPRING", d0.getFullYear()] : mo < 8 ? ["SUMMER", d0.getFullYear()] : mo < 11 ? ["FALL", d0.getFullYear()] : ["WINTER", d0.getFullYear() + 1];
 
-const mq = (args, p) => `{Page(page:${p},perPage:25){pageInfo{hasNextPage} media(type:${P.mode},isAdult:false,${args}){${M}}}}`;
+const MC = "characters(role:MAIN,sort:RELEVANCE,perPage:1){nodes{gender}}";
+const mq = (args, p) => `{Page(page:${p},perPage:25){pageInfo{hasNextPage} media(type:${P.mode},isAdult:false,${args}){${M} ${MC}}}}`;
 
 async function gql(query, tries = 0){
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
@@ -150,6 +151,8 @@ const jpl = o => [o.jp, o.ro].filter(Boolean).join(" · ");
 const nm = m => {
   const sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "";
   return {name:m.title.english || m.title.romaji, jp:m.title.native || "", ro:m.title.romaji && m.title.romaji !== (m.title.english || m.title.romaji) ? m.title.romaji : "", img:m.coverImage.large, score:sc,
+    mcg:m.characters ? (m.characters.nodes[0] || {}).gender || "" : "",
+    mcl:m.characters ? ({Male:t("male"), Female:t("female")}[(m.characters.nodes[0] || {}).gender] || (m.characters.nodes[0] || {}).gender || t("unk")) : undefined,
     meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
     info:["★ " + (sc || "-"), t("st")[m.status] || "", (m.genres || []).join(", ")].filter(Boolean).join(" · "),
     text:clean(m.description) || t("nod"), url:m.siteUrl};
@@ -184,7 +187,7 @@ function builder(){
   else if (k === "rank") a = "sort:SCORE_DESC";
   else if (k === "new") a = P.mode === "ANIME" ? `season:${SN},seasonYear:${SY},sort:POPULARITY_DESC` : "status:RELEASING,sort:TRENDING_DESC";
   else a = filt(k === "rec" ? "popularity_greater:5000" : "");
-  return {kind:"media", rank:k === "rank", q:p => mq(a, p)};
+  return {kind:"media", rank:k === "rank", mc:k === "rec" || k === "genre", q:p => mq(a, p)};
 }
 
 function norm(data, kind){
@@ -220,13 +223,15 @@ async function run(append){
   try {
     const r = norm(await gql(st.b.q(st.page)), st.b.kind);
     if (my !== token) return;
+    if (S.mc && st.b.mc) r.items = r.items.filter(o => o.mcg === S.mc);
     const from = st.list.length;
     st.list = st.list.concat(r.items); st.more = r.more;
-    if (!st.list.length) out.innerHTML = `<p class="msg">${t("empty")}</p>`;
-    else if (append) out.insertAdjacentHTML("beforeend", cards(r.items, from, st.b.rank));
+    const auto = (st.b.kind === "char" || (S.mc && st.b.mc)) && st.more && st.list.length < 15 && st.page < 10;
+    if (!st.list.length) out.innerHTML = `<p class="msg">${auto ? t("load") : t("empty")}</p>`;
+    else if (append && from > 0) out.insertAdjacentHTML("beforeend", cards(r.items, from, st.b.rank));
     else out.innerHTML = cards(r.items, 0, st.b.rank);
     $("more").hidden = !st.more;
-    if (st.b.kind === "char" && st.more && r.items.length < 12) run(true);
+    if (auto) run(true);
   } catch (e) {
     if (my !== token) return;
     if (append) st.page--;
@@ -252,7 +257,7 @@ function renderCtl(){
     for (let y = new Date().getFullYear() + 1; y >= 1970; y--) yrs.push([y, y]);
     c.innerHTML = (k === "rec" ? `<div style="color:var(--mu);font-size:.85rem">${t("hint")}</div>` : "") +
       `<details ${S.genres.length || k === "genre" ? "open" : ""}><summary>${t("genres")} <span id="gc"></span></summary><input id="gq" type="search" autocomplete="off" placeholder="${t("gs")}" style="width:100%;margin-bottom:8px"><div class="gl" id="gl"></div></details>` +
-      `<div class="row">${dd("fY", yrs, S.year)}${dd("fS", SORTS.map(([v, l]) => [v, t(l)]), S.sort)}<button class="chip ${S.done ? "on" : ""}" id="fD">${t("done")}</button><button class="chip" id="fR">${t("reset")}</button></div>`;
+      `<div class="row">${dd("fY", yrs, S.year)}${dd("fS", SORTS.map(([v, l]) => [v, t(l)]), S.sort)}${dd("fM", [["", t("mcAll")], ["Male", t("mcM")], ["Female", t("mcF")]], S.mc)}<button class="chip ${S.done ? "on" : ""}" id="fD">${t("done")}</button><button class="chip" id="fR">${t("reset")}</button></div>`;
     fillGl();
   } else c.innerHTML = "";
 }
@@ -269,6 +274,7 @@ function renderSet(){
 function ddPick(id, v){
   if (id === "fY") { S.year = v; run(false); }
   else if (id === "fS") { S.sort = v; run(false); }
+  else if (id === "fM") { S.mc = v; run(false); }
   else if (id === "sTheme") { P.theme = v; save(); applyTheme(); }
   else if (id === "sCols") { P.cols = v; save(); document.documentElement.style.setProperty("--cols", v); }
   else if (id === "sLang") { P.lang = v; save(); applyLang(); if (st.list.length) run(false); }
@@ -334,7 +340,7 @@ $("ctl").onclick = e => {
   if (g) { const v = g.dataset.g, i = S.genres.indexOf(v); i < 0 ? S.genres.push(v) : S.genres.splice(i, 1); fillGl(); run(false); }
   else if (w) { S.wd = +w.dataset.w; renderCtl(); run(false); }
   else if (e.target.id === "fD") { S.done = !S.done; e.target.classList.toggle("on", S.done); run(false); }
-  else if (e.target.id === "fR") { S.genres = []; S.year = ""; S.done = false; S.sort = S.tab === "rec" ? "SCORE_DESC" : "POPULARITY_DESC"; renderCtl(); run(false); }
+  else if (e.target.id === "fR") { S.genres = []; S.year = ""; S.done = false; S.mc = ""; S.sort = S.tab === "rec" ? "SCORE_DESC" : "POPULARITY_DESC"; renderCtl(); run(false); }
 };
 $("ctl").oninput = e => { if (e.target.id === "gq") fillGl(); };
 const TR = new Map();
@@ -358,7 +364,7 @@ let dTok = 0;
 $("out").onclick = e => {
   const c = e.target.closest(".card"); if (!c) return;
   const o = st.list[c.dataset.i], my = ++dTok;
-  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3>${jpl(o) ? `<div style="color:var(--mu);font-size:.85rem;margin-bottom:4px">${esc(jpl(o))}</div>` : ""}<div style="font-size:.85rem">${esc(o.info)}</div><p id="dtx">${esc(o.text)}</p><div id="dnote" style="font-size:.72rem;color:var(--mu);margin-bottom:6px"></div><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
+  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3>${jpl(o) ? `<div style="color:var(--mu);font-size:.85rem;margin-bottom:4px">${esc(jpl(o))}</div>` : ""}<div style="font-size:.85rem">${esc(o.info)}</div>${o.mcl ? `<div style="font-size:.85rem;margin-top:8px"><b>Main Character:</b> ${esc(o.mcl)}</div>` : ""}<p id="dtx">${esc(o.text)}</p><div id="dnote" style="font-size:.72rem;color:var(--mu);margin-bottom:6px"></div><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
   $("dlg").showModal();
   if (P.lang === "id" && o.text !== L.id.nod && o.text !== L.en.nod) {
     $("dnote").textContent = t("load");
