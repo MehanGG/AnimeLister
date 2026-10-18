@@ -4,11 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AnimangaList</title>
+<meta name="theme-color" content="#2563eb">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f1f5fd;--sf:#fff;--ink:#0e1a33;--mu:#5b6985;--ac:#2563eb;--ac2:#e6eeff;--ln:#d9e3f5;--r:12px}
-:root[data-theme=dark]{--bg:#0a1122;--sf:#111b33;--ink:#e8eefc;--mu:#93a3c6;--ac:#5b8cff;--ac2:#18274a;--ln:#22335c}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark;--bg:#0a1122;--sf:#111b33;--ink:#e8eefc;--mu:#93a3c6;--ac:#5b8cff;--ac2:#18274a;--ln:#22335c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;scrollbar-width:thin;scrollbar-color:var(--ln) transparent}
+input,select{-webkit-appearance:none;appearance:none}
+input::-webkit-search-cancel-button,input::-webkit-search-decoration{-webkit-appearance:none;display:none}
+summary{list-style:none}summary::-webkit-details-marker{display:none}
+summary::before{content:"▸ "}details[open]>summary::before{content:"▾ "}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:var(--ln);border-radius:99px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::selection{background:var(--ac);color:#fff}
+input:focus{border-color:var(--ac)}
+body{-webkit-touch-callout:none;overscroll-behavior:none}
+.card,.chip,.gb,.ddb,.ddo,nav button,.seg button,.ic,.x{-webkit-user-select:none;user-select:none}
+.dd{position:relative;display:inline-block}
+.ddb{display:flex;gap:8px;align-items:center;padding:8px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);font-size:.88rem;font-weight:600}
+.ddb i{font-style:normal;color:var(--mu);font-size:.7rem}
+.ddm{position:absolute;left:0;top:calc(100% + 4px);min-width:100%;max-height:40vh;overflow:auto;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:4px;z-index:30;box-shadow:0 10px 28px rgba(5,10,30,.28)}
+.ddo{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:8px;white-space:nowrap;font-size:.88rem}
+.ddo.on{background:var(--ac2);color:var(--ac);font-weight:700}
+#set{overflow:visible}#set .ddm{left:auto;right:0}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,sans-serif;line-height:1.45}
 button,select,input{font:inherit;color:inherit}
 button{cursor:pointer;user-select:none;-webkit-user-select:none;border:0;background:none;padding:0}
@@ -68,7 +88,7 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
     <h1>Animanga<span>List</span></h1>
     <div class="seg" id="mode"><button data-m="ANIME">Anime</button><button data-m="MANGA">Manga</button></div>
     <button class="ic" id="gear" aria-label="Settings">⚙</button>
-    <form id="sf"><input id="q" type="search"><button class="pri" data-i="go">Cari</button></form>
+    <form id="sf"><input id="q" type="search" autocomplete="off" enterkeyhint="search"><button class="pri" data-i="go">Cari</button></form>
   </div>
   <nav id="tabs"></nav>
 </header>
@@ -80,13 +100,7 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
 </main>
 
 <dialog id="dlg"><button class="x" aria-label="Close" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
-<dialog id="set">
-  <button class="x" aria-label="Close" onclick="set.close()">×</button>
-  <h3 data-i="set"></h3>
-  <div class="fld"><span data-i="lang"></span><select id="sLang"><option value="id">Bahasa Indonesia</option><option value="en">English</option></select></div>
-  <div class="fld"><span data-i="theme"></span><select id="sTheme"><option value="auto" data-i="auto"></option><option value="light" data-i="light"></option><option value="dark" data-i="dark"></option></select></div>
-  <div class="fld"><span data-i="cols"></span><select id="sCols"><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
-</dialog>
+<dialog id="set"><button class="x" aria-label="Close" onclick="set.close()">×</button><h3 data-i="set"></h3><div id="setBody"></div></dialog>
 
 <script>
 const API = "https://graphql.anilist.co";
@@ -101,16 +115,16 @@ const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
 const save = () => { try { localStorage.setItem("aml", JSON.stringify(P)); } catch (e) {} };
 const t = k => L[P.lang][k] ?? k;
-const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:""};
+const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:"", done:false};
 let st = {list:[], page:1, more:false, b:null}, token = 0;
 
 const M = "id title{romaji english native} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
@@ -148,7 +162,8 @@ function filt(extra){
   if (ts.length) a.push("tag_in:" + JSON.stringify(ts));
   if (S.year) a.push(`startDate_greater:${S.year * 10000},startDate_lesser:${(+S.year + 1) * 10000}`);
   if (extra) a.push(extra);
-  if (S.sort.startsWith("START")) a.push("status_not:NOT_YET_RELEASED");
+  if (S.done) a.push("status:FINISHED");
+  else if (S.sort.startsWith("START")) a.push("status_not:NOT_YET_RELEASED");
   if (S.sort.startsWith("SCORE")) a.push("averageScore_greater:0");
   a.push("sort:" + S.sort);
   return a.join(",");
@@ -233,15 +248,43 @@ function renderCtl(){
     c.innerHTML = `<div class="row">${[1,2,3,4,5,6,0].map(w => `<button class="chip ${S.wd === w ? "on" : ""}" data-w="${w}">${new Date(2025, 0, 5 + w).toLocaleDateString(P.lang === "id" ? "id-ID" : "en-US", {weekday:"long"})}</button>`).join("")}</div>`;
   } else if (k === "rec" || k === "genre") {
     if (!ALL) { c.innerHTML = `<p class="msg">${t("load")}</p>`; tagP = tagP || loadTags(); return; }
-    const yr = new Date().getFullYear() + 1;
-    let yo = `<option value="">${t("year")}</option>`;
-    for (let y = yr; y >= 1970; y--) yo += `<option ${S.year == y ? "selected" : ""}>${y}</option>`;
+    const yrs = [["", t("year")]];
+    for (let y = new Date().getFullYear() + 1; y >= 1970; y--) yrs.push([y, y]);
     c.innerHTML = (k === "rec" ? `<div style="color:var(--mu);font-size:.85rem">${t("hint")}</div>` : "") +
-      `<details ${S.genres.length || k === "genre" ? "open" : ""}><summary>${t("genres")} <span id="gc"></span></summary><input id="gq" type="search" placeholder="${t("gs")}" style="width:100%;margin-bottom:8px"><div class="gl" id="gl"></div></details>` +
-      `<div class="row"><select id="fY">${yo}</select><select id="fS">${SORTS.map(([v, l]) => `<option value="${v}" ${S.sort === v ? "selected" : ""}>${t(l)}</option>`).join("")}</select><button class="chip" id="fR">${t("reset")}</button></div>`;
+      `<details ${S.genres.length || k === "genre" ? "open" : ""}><summary>${t("genres")} <span id="gc"></span></summary><input id="gq" type="search" autocomplete="off" placeholder="${t("gs")}" style="width:100%;margin-bottom:8px"><div class="gl" id="gl"></div></details>` +
+      `<div class="row">${dd("fY", yrs, S.year)}${dd("fS", SORTS.map(([v, l]) => [v, t(l)]), S.sort)}<button class="chip ${S.done ? "on" : ""}" id="fD">${t("done")}</button><button class="chip" id="fR">${t("reset")}</button></div>`;
     fillGl();
   } else c.innerHTML = "";
 }
+const dd = (id, opts, val) => {
+  const cur = (opts.find(o => String(o[0]) === String(val)) || opts[0])[1];
+  return `<div class="dd" id="${id}"><button type="button" class="ddb"><span>${esc(cur)}</span><i>▾</i></button><div class="ddm" hidden>${opts.map(([v, l]) => `<button type="button" class="ddo ${String(v) === String(val) ? "on" : ""}" data-v="${esc(v)}">${esc(l)}</button>`).join("")}</div></div>`;
+};
+function renderSet(){
+  const f = (l, h) => `<div class="fld"><span>${l}</span>${h}</div>`;
+  $("setBody").innerHTML = f(t("lang"), dd("sLang", [["id","Bahasa Indonesia"],["en","English"]], P.lang)) +
+    f(t("theme"), dd("sTheme", [["auto",t("auto")],["light",t("light")],["dark",t("dark")]], P.theme)) +
+    f(t("cols"), dd("sCols", [3,4,5,6].map(n => [n, n]), P.cols));
+}
+function ddPick(id, v){
+  if (id === "fY") { S.year = v; run(false); }
+  else if (id === "fS") { S.sort = v; run(false); }
+  else if (id === "sTheme") { P.theme = v; save(); applyTheme(); }
+  else if (id === "sCols") { P.cols = v; save(); document.documentElement.style.setProperty("--cols", v); }
+  else if (id === "sLang") { P.lang = v; save(); applyLang(); if (st.list.length) run(false); }
+}
+document.addEventListener("click", e => {
+  const d = e.target.closest(".dd");
+  document.querySelectorAll(".ddm").forEach(m => { if (!d || m.parentNode !== d) m.hidden = true; });
+  if (!d) return;
+  const o = e.target.closest(".ddo");
+  if (o) {
+    d.querySelector(".ddm").hidden = true;
+    d.querySelector(".ddb span").textContent = o.textContent;
+    d.querySelectorAll(".ddo").forEach(x => x.classList.toggle("on", x === o));
+    ddPick(d.id, o.dataset.v);
+  } else if (e.target.closest(".ddb")) { const m = d.querySelector(".ddm"); m.hidden = !m.hidden; }
+});
 function fillGl(){
   const q = ($("gq").value || "").toLowerCase();
   $("gl").innerHTML = ALL.filter(n => n.toLowerCase().includes(q)).map(n => `<button class="gb ${S.genres.includes(n) ? "on" : ""}" data-g="${esc(n)}">${esc(n)}</button>`).join("");
@@ -265,7 +308,7 @@ function applyLang(){
   document.documentElement.lang = P.lang;
   document.querySelectorAll("[data-i]").forEach(e => e.textContent = t(e.dataset.i));
   $("q").placeholder = t("ph");
-  $("sLang").value = P.lang; $("sTheme").value = P.theme; $("sCols").value = P.cols;
+  renderSet();
   renderTabs(); renderTitle(); renderCtl();
 }
 function applyTheme(){
@@ -290,14 +333,10 @@ $("ctl").onclick = e => {
   const g = e.target.closest("[data-g]"), w = e.target.closest("[data-w]");
   if (g) { const v = g.dataset.g, i = S.genres.indexOf(v); i < 0 ? S.genres.push(v) : S.genres.splice(i, 1); fillGl(); run(false); }
   else if (w) { S.wd = +w.dataset.w; renderCtl(); run(false); }
-  else if (e.target.id === "fR") { S.genres = []; S.year = ""; S.sort = S.tab === "rec" ? "SCORE_DESC" : "POPULARITY_DESC"; renderCtl(); run(false); }
+  else if (e.target.id === "fD") { S.done = !S.done; e.target.classList.toggle("on", S.done); run(false); }
+  else if (e.target.id === "fR") { S.genres = []; S.year = ""; S.done = false; S.sort = S.tab === "rec" ? "SCORE_DESC" : "POPULARITY_DESC"; renderCtl(); run(false); }
 };
 $("ctl").oninput = e => { if (e.target.id === "gq") fillGl(); };
-$("ctl").onchange = e => {
-  if (e.target.id === "fY") S.year = e.target.value;
-  else if (e.target.id === "fS") S.sort = e.target.value; else return;
-  run(false);
-};
 const TR = new Map();
 async function tr(text){
   if (TR.has(text)) return TR.get(text);
@@ -329,9 +368,6 @@ $("out").onclick = e => {
 };
 $("more").onclick = () => run(true);
 $("gear").onclick = () => $("set").showModal();
-$("sLang").onchange = e => { P.lang = e.target.value; save(); applyLang(); if (st.list.length) run(false); };
-$("sTheme").onchange = e => { P.theme = e.target.value; save(); applyTheme(); };
-$("sCols").onchange = e => { P.cols = e.target.value; save(); document.documentElement.style.setProperty("--cols", P.cols); };
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 
 document.documentElement.style.setProperty("--cols", P.cols);
