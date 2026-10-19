@@ -270,7 +270,7 @@ function norm(data, kind){
 function cards(items, from, rank){
   return items.map((o, i) => {
     const n = from + i, b = o.badge ? `<span class="bd">${esc(o.badge)}</span>` : rank ? `<span class="bd">#${n + 1}</span>` : "";
-    return `<button class="card${o.adult ? " adult" : ""}" data-i="${n}"><span class="im">${b}${o.adult ? '<span class="ad">18+</span>' : ""}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span>${jpl(o) ? `<span class="m">${esc(jpl(o))}</span>` : ""}<span class="m">${esc(o.meta)}</span></button>`;
+    return `<button class="card${o.adult && !adultOk() ? " adult" : ""}" data-i="${n}"><span class="im">${b}${o.adult ? '<span class="ad">18+</span>' : ""}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span>${jpl(o) ? `<span class="m">${esc(jpl(o))}</span>` : ""}<span class="m">${esc(o.meta)}</span></button>`;
   }).join("");
 }
 
