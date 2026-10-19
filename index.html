@@ -35,6 +35,31 @@ body{-webkit-touch-callout:none;overscroll-behavior:none}
 .cg .card .t{font-size:.72rem}
 #cf{flex:none;order:0;display:flex;align-items:center;gap:6px;padding:10px;border-top:1px solid var(--ln)}
 #cf input{flex:1;min-width:0;border-radius:99px}
+#pg{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto}
+.pgh{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--ln);padding:10px 14px}
+.pgh button{color:var(--ac);font-weight:700}
+#pgb{max-width:900px;margin:auto;padding:14px 14px 60px}
+.hero{position:relative;aspect-ratio:16/9;max-height:380px;width:100%;border-radius:14px;overflow:hidden;background:#000;cursor:pointer}
+.hero img{width:100%;height:100%;object-fit:cover}.hero img.cv{object-fit:contain}
+.hero iframe{width:100%;height:100%;border:0}
+.play{position:absolute;inset:0;margin:auto;width:64px;height:64px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:1.6rem}
+#pgb h1{font-size:1.4rem;margin:14px 0 2px}
+.sub{color:var(--mu);font-size:.85rem}
+.sh{margin:22px 0 10px;font-size:1.05rem}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ii{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:8px 10px;font-size:.82rem;min-width:0;word-break:break-word}
+.ii span{display:block;color:var(--mu);font-size:.7rem}
+.hs{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px}
+.pr{flex:0 0 80px;text-align:center;font-size:.72rem}
+.pr img{width:80px;height:80px;object-fit:cover;border-radius:12px;display:block}
+.pr span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:600;margin-top:4px}
+.pr small{color:var(--mu);text-transform:capitalize}
+.br{display:flex;align-items:center;gap:8px;font-size:.78rem;margin:5px 0}
+.br span{flex:0 0 110px;color:var(--mu)}.br i{flex:1;height:8px;border-radius:9px;background:var(--ac2);overflow:hidden}
+.br b{display:block;height:100%;background:var(--ac)}.br em{font-style:normal;flex:0 0 64px;text-align:right}
+.sbs{display:flex;gap:4px;align-items:flex-end;height:90px;margin-top:6px}
+.sb{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-size:.62rem;color:var(--mu)}
+.sb b{width:100%;background:var(--ac);border-radius:4px 4px 0 0;min-height:2px}
 .dd{position:relative;display:inline-block}
 .ddb{display:flex;gap:8px;align-items:center;padding:8px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);font-size:.88rem;font-weight:600}
 .ddb i{font-style:normal;color:var(--mu);font-size:.7rem}
@@ -118,6 +143,7 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
   <div id="cmsgs"></div>
   <form id="cf"><input id="cq" autocomplete="off" maxlength="300"><button class="pri" data-i="chatSend"></button></form>
 </section>
+<section id="pg" hidden><div class="pgh"><button id="pgb0"></button></div><div id="pgb"></div></section>
 <dialog id="dlg"><button class="x" aria-label="Close" onclick="dlg.close()">×</button><div id="dbody" class="dl"></div></dialog>
 <dialog id="set"><button class="x" aria-label="Close" onclick="set.close()">×</button><h3 data-i="set"></h3><div id="setBody"></div></dialog>
 
@@ -130,14 +156,14 @@ const GEN = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror","M
 let ALL = null, tagP = null;
 const GSET = new Set();
 const SORTS = [["POPULARITY_DESC","s1"],["POPULARITY","s2"],["START_DATE_DESC","s3"],["START_DATE","s4"],["SCORE_DESC","s5"],["SCORE","s6"]];
-const TABS = ["pop","rank","new","rec","genre","sched","waifu"];
+const TABS = ["pop","rank","new","rec","genre","sched","waifu","favT"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",favT:"Favorit",more2:"Lihat Selengkapnya..",favAdd:"♡ Favorit",favOn:"♥ Difavoritkan",back:"← Kembali",favEmpty:"Belum ada favorit. Buka detail anime lalu tekan ♡ Favorit.",d:{air:"Airing",fmt:"Format",ep:"Episode",dur:"Durasi episode",stat:"Status",sd:"Tanggal mulai",ed:"Tanggal selesai",sea:"Musim",pop:"Popularitas",stu:"Studio",gen:"Genre",typ:"Tipe",ro:"Romaji",en:"English",na:"Native",syn:"Sinonim",age:"Rating usia",ov:"Overview",ch:"Karakter",sf:"Staf",sts:"Statistik",s2:"Season 2 / Lanjutan:",rel:"Yang bersangkutan:",sim:"Yang serupa:",favs:"Difavoritkan",dist:"Status pengguna",sdist:"Sebaran skor",age18:"18+",ageAll:"Umum (bukan 18+)",min:"mnt",next:"Ep",avg:"Skor rata-rata",trn:"Diterjemahkan otomatis",u:{CURRENT:"Sedang ditonton/dibaca",PLANNING:"Rencana",COMPLETED:"Selesai",DROPPED:"Drop",PAUSED:"Ditunda",REPEATING:"Ulang"}},chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",favT:"Favorites",more2:"See more..",favAdd:"♡ Favorite",favOn:"♥ Favorited",back:"← Back",favEmpty:"No favorites yet. Open a title and tap ♡ Favorite.",d:{air:"Airing",fmt:"Format",ep:"Episodes",dur:"Episode duration",stat:"Status",sd:"Start date",ed:"End date",sea:"Season",pop:"Popularity",stu:"Studios",gen:"Genres",typ:"Type",ro:"Romaji",en:"English",na:"Native",syn:"Synonyms",age:"Age rating",ov:"Overview",ch:"Characters",sf:"Staff",sts:"Stats",s2:"Season 2 / Sequel:",rel:"Related:",sim:"Similar:",favs:"Favorited",dist:"User status",sdist:"Score distribution",age18:"18+",ageAll:"General (not 18+)",min:"min",next:"Ep",avg:"Average score",trn:"",u:{CURRENT:"Current",PLANNING:"Planning",COMPLETED:"Completed",DROPPED:"Dropped",PAUSED:"Paused",REPEATING:"Repeating"}},chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
@@ -169,7 +195,7 @@ async function gql(query, tries = 0){
 const jpl = o => [o.jp, o.ro].filter(Boolean).join(" · ");
 const nm = m => {
   const sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "";
-  return {name:m.title.english || m.title.romaji, jp:m.title.native || "", ro:m.title.romaji && m.title.romaji !== (m.title.english || m.title.romaji) ? m.title.romaji : "", img:m.coverImage.large, score:sc,
+  return {id:m.id, name:m.title.english || m.title.romaji, jp:m.title.native || "", ro:m.title.romaji && m.title.romaji !== (m.title.english || m.title.romaji) ? m.title.romaji : "", img:m.coverImage.large, score:sc,
     mcg:m.characters ? (m.characters.nodes[0] || {}).gender || "" : "",
     mcl:m.characters ? ({Male:t("male"), Female:t("female")}[(m.characters.nodes[0] || {}).gender] || (m.characters.nodes[0] || {}).gender || t("unk")) : undefined,
     meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
@@ -236,6 +262,7 @@ function cards(items, from, rank){
 }
 
 async function run(append){
+  if (S.tab === "favT") { token++; return showFav(); }
   const my = ++token, out = $("out");
   if (!append) { st = {list:[], page:1, more:false, b:builder()}; out.innerHTML = `<p class="msg">${t("load")}</p>`; $("more").hidden = true; }
   else st.page++;
@@ -264,7 +291,7 @@ function renderTabs(){
 }
 function renderTitle(){
   const mode = P.mode === "ANIME" ? "Anime" : "Manga";
-  $("title").textContent = S.tab === "search" ? `${t("res")}: "${S.q}"` : S.tab === "waifu" ? t("waifu") : `${t(S.tab)} · ${mode}`;
+  $("title").textContent = S.tab === "search" ? `${t("res")}: "${S.q}"` : S.tab === "waifu" || S.tab === "favT" ? t(S.tab) : `${t(S.tab)} · ${mode}`;
 }
 function renderCtl(){
   const c = $("ctl"), k = S.tab;
@@ -382,8 +409,13 @@ async function tr(text){
 let dTok = 0;
 function openDetail(o){
   const my = ++dTok;
-  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3>${jpl(o) ? `<div style="color:var(--mu);font-size:.85rem;margin-bottom:4px">${esc(jpl(o))}</div>` : ""}<div style="font-size:.85rem">${esc(o.info)}</div>${o.mcl ? `<div style="font-size:.85rem;margin-top:8px"><b>Main Character:</b> ${esc(o.mcl)}</div>` : ""}<p id="dtx">${esc(o.text)}</p><div id="dnote" style="font-size:.72rem;color:var(--mu);margin-bottom:6px"></div><a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a></div>`;
+  $("dbody").innerHTML = `<img src="${esc(o.img)}" alt=""><div><h3>${esc(o.name)}</h3>${jpl(o) ? `<div style="color:var(--mu);font-size:.85rem;margin-bottom:4px">${esc(jpl(o))}</div>` : ""}<div style="font-size:.85rem">${esc(o.info)}</div>${o.mcl ? `<div style="font-size:.85rem;margin-top:8px"><b>Main Character:</b> ${esc(o.mcl)}</div>` : ""}<p id="dtx">${esc(o.text)}</p><div id="dnote" style="font-size:.72rem;color:var(--mu);margin-bottom:6px"></div>${o.id ? `<div class="row"><button class="pri" id="dmore">${t("more2")}</button><button class="chip" id="dfav"></button></div>` : `<a href="${esc(o.url)}" target="_blank" rel="noopener">${t("open")}</a>`}</div>`;
   $("dlg").showModal();
+  if (o.id) {
+    const fb = () => { $("dfav").textContent = favHas(o.id) ? t("favOn") : t("favAdd"); }; fb();
+    $("dfav").onclick = () => { favToggle(o); fb(); };
+    $("dmore").onclick = () => openPage(o.id);
+  }
   if (P.lang === "id" && o.text !== L.id.nod && o.text !== L.en.nod) {
     $("dnote").textContent = t("load");
     tr(o.text).then(x => { if (my === dTok) { $("dtx").textContent = x; $("dnote").textContent = t("trn"); } })
@@ -395,6 +427,99 @@ $("more").onclick = () => run(true);
 $("gear").onclick = () => $("set").showModal();
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 
+
+// ---- Favorit ----
+const favLoad = () => { try { return JSON.parse(localStorage.getItem("aml_fav") || "[]"); } catch (e) { return []; } };
+const favHas = id => favLoad().some(x => x.id === id);
+function favToggle(o){
+  let a = favLoad();
+  if (a.some(x => x.id === o.id)) a = a.filter(x => x.id !== o.id);
+  else a.unshift({id:o.id, name:o.name, jp:o.jp, ro:o.ro, img:o.img, score:o.score, meta:o.meta, info:o.info, text:o.text, url:o.url});
+  try { localStorage.setItem("aml_fav", JSON.stringify(a)); } catch (e) {}
+  if (S.tab === "favT") showFav();
+}
+function showFav(){
+  const l = favLoad();
+  st = {list:l, page:1, more:false, b:{kind:"media", rank:false}};
+  $("more").hidden = true;
+  $("out").innerHTML = l.length ? cards(l, 0, false) : `<p class="msg">${t("favEmpty")}</p>`;
+}
+
+// ---- Halaman detail ----
+let pgStack = [], pgO = null;
+const pgQ = id => `{Media(id:${+id}){id type format status episodes chapters duration season seasonYear popularity favourites averageScore isAdult siteUrl
+ startDate{year month day} endDate{year month day} title{romaji english native} synonyms genres description(asHtml:false) bannerImage coverImage{large}
+ trailer{id site} nextAiringEpisode{episode airingAt} studios(isMain:true){nodes{name}}
+ characters(perPage:12,sort:[ROLE,RELEVANCE]){edges{role node{id name{full} image{medium}}}}
+ staff(perPage:12){edges{role node{id name{full} image{medium}}}}
+ stats{statusDistribution{status amount} scoreDistribution{score amount}}
+ relations{edges{relationType node{id title{romaji english} coverImage{large}}}}
+ recommendations(perPage:12,sort:RATING_DESC){nodes{mediaRecommendation{id title{romaji english} coverImage{large} averageScore}}}}}`;
+async function openPage(id){
+  pgStack.push(id);
+  if ($("dlg").open) $("dlg").close();
+  $("pg").hidden = false; document.body.style.overflow = "hidden"; $("pg").scrollTop = 0;
+  $("pgb0").textContent = t("back");
+  $("pgb").innerHTML = `<p class="msg">${t("load")}</p>`;
+  try {
+    const d = await gql(pgQ(id));
+    if (pgStack[pgStack.length - 1] !== id) return;
+    renderPage(d.Media);
+  } catch (e) {
+    if (pgStack[pgStack.length - 1] !== id) return;
+    $("pgb").innerHTML = `<p class="msg">${t("err")} (${esc(e.message)})<br><br><button class="pri" id="pretry">${t("retry")}</button></p>`;
+    $("pretry").onclick = () => { pgStack.pop(); openPage(id); };
+  }
+}
+function pgBack(){
+  pgStack.pop(); const id = pgStack.pop();
+  if (id === undefined) { $("pg").hidden = true; document.body.style.overflow = ""; $("pgb").innerHTML = ""; }
+  else openPage(id);
+}
+function renderPage(m){
+  const D = t("d"), sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "", name = m.title.english || m.title.romaji;
+  const o = pgO = {id:m.id, name, jp:m.title.native || "", ro:m.title.romaji !== name ? m.title.romaji : "", img:m.coverImage.large, score:sc,
+    meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
+    info:"★ " + (sc || "-"), text:clean(m.description) || t("nod"), url:m.siteUrl};
+  const fd = x => x && x.year ? [x.day, x.month, x.year].filter(Boolean).join("/") : "-", nx = m.nextAiringEpisode, T = m.trailer;
+  const info = [[D.air, nx ? D.next + " " + nx.episode + " · " + new Date(nx.airingAt * 1000).toLocaleString(P.lang, {dateStyle:"medium", timeStyle:"short"}) : "-"],
+    [D.fmt, m.format || "-"], [D.ep, m.episodes || m.chapters || "-"], [D.dur, m.duration ? m.duration + " " + D.min : "-"], [D.stat, t("st")[m.status] || m.status || "-"],
+    [D.sd, fd(m.startDate)], [D.ed, fd(m.endDate)], [D.sea, m.season ? m.season[0] + m.season.slice(1).toLowerCase() + " " + (m.seasonYear || "") : "-"],
+    [D.pop, (m.popularity || 0).toLocaleString(P.lang)], [D.stu, m.studios.nodes.map(x => x.name).join(", ") || "-"], [D.gen, m.genres.join(", ") || "-"], [D.typ, m.type],
+    [D.ro, m.title.romaji || "-"], [D.en, m.title.english || "-"], [D.na, m.title.native || "-"], [D.syn, m.synonyms.join(", ") || "-"], [D.age, m.isAdult ? D.age18 : D.ageAll]]
+    .map(([a, b]) => `<div class="ii"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join("");
+  let hero;
+  const src = T && T.id ? (T.site === "youtube" ? "https://www.youtube.com/embed/" + T.id + "?autoplay=1&rel=0" : T.site === "dailymotion" ? "https://www.dailymotion.com/embed/video/" + T.id + "?autoplay=1" : "") : "";
+  if (src) hero = `<div class="hero" data-v="${esc(src)}"><img src="${esc(m.bannerImage || (T.site === "youtube" ? "https://i.ytimg.com/vi/" + T.id + "/hqdefault.jpg" : m.coverImage.large))}" alt=""><span class="play">▶</span></div>`;
+  else hero = `<div class="hero" style="cursor:default"><img class="${m.bannerImage ? "" : "cv"}" src="${esc(m.bannerImage || m.coverImage.large)}" alt=""></div>`;
+  const ppl = e => e.length ? `<div class="hs">${e.map(x => `<div class="pr"><img loading="lazy" src="${esc(x.node.image.medium)}" alt=""><span>${esc(x.node.name.full)}</span><small>${esc(String(x.role || "").replace(/_/g, " ").toLowerCase())}</small></div>`).join("")}</div>` : "";
+  const rc = (n, lab) => `<button class="card" data-p="${n.id}"><span class="im"><img loading="lazy" src="${esc(n.coverImage.large)}" alt=""></span><span class="t">${esc(n.title.english || n.title.romaji)}</span><span class="m">${esc(lab)}</span></button>`;
+  const grid = h => h ? `<div class="grid">${h}</div>` : "";
+  const sec = (ti, b) => b ? `<h3 class="sh">${esc(ti)}</h3>${b}` : "";
+  const rl = m.relations.edges, nice = r => r.replace(/_/g, " ").toLowerCase();
+  const seq = rl.filter(e => e.relationType === "SEQUEL").map(e => rc(e.node, nice(e.relationType))).join("");
+  const oth = rl.filter(e => e.relationType !== "SEQUEL").map(e => rc(e.node, nice(e.relationType))).join("");
+  const sim = m.recommendations.nodes.map(n => n.mediaRecommendation).filter(Boolean).map(n => rc(n, n.averageScore ? "★ " + (n.averageScore / 10).toFixed(1) : "")).join("");
+  const sd = m.stats.statusDistribution || [], tot = sd.reduce((a, x) => a + x.amount, 0) || 1, sb = m.stats.scoreDistribution || [], mx = Math.max(1, ...sb.map(x => x.amount));
+  const stats = `<div class="sub">★ ${sc || "-"} · ${D.favs}: ${(m.favourites || 0).toLocaleString(P.lang)}</div><h4>${D.dist}</h4>` +
+    sd.map(x => `<div class="br"><span>${esc(D.u[x.status] || x.status)}</span><i><b style="width:${Math.round(x.amount / tot * 100)}%"></b></i><em>${x.amount.toLocaleString(P.lang)}</em></div>`).join("") +
+    `<h4>${D.sdist}</h4><div class="sbs">${sb.map(x => `<div class="sb"><b style="height:${Math.round(x.amount / mx * 100)}%"></b>${x.score}</div>`).join("")}</div>`;
+  $("pgb").innerHTML = hero + `<h1>${esc(name)}</h1><div class="sub">${esc([o.jp, o.ro].filter(Boolean).join(" · "))}</div>
+    <div class="row" style="margin:12px 0"><button class="chip" id="pfav"></button><a class="chip" href="${esc(m.siteUrl)}" target="_blank" rel="noopener">AniList ↗</a></div>
+    <div class="ig">${info}</div>` +
+    sec(D.ov, `<p id="pov" style="white-space:pre-line;font-size:.9rem;color:var(--mu)">${esc(o.text)}</p><div id="pnote" class="sub"></div>`) +
+    sec(D.ch, ppl(m.characters.edges)) + sec(D.sf, ppl(m.staff.edges)) + sec(D.sts, stats) +
+    sec(D.s2, grid(seq)) + sec(D.rel, grid(oth)) + sec(D.sim, grid(sim));
+  const fb = () => { $("pfav").textContent = favHas(o.id) ? t("favOn") : t("favAdd"); };
+  fb(); $("pfav").onclick = () => { favToggle(o); fb(); };
+  if (P.lang === "id" && o.text !== t("nod")) tr(o.text).then(x => { if (pgO === o) { $("pov").textContent = x; $("pnote").textContent = D.trn; } }).catch(() => {});
+}
+$("pgb0").onclick = pgBack;
+$("pgb").onclick = e => {
+  const c = e.target.closest("[data-p]"), v = e.target.closest("[data-v]");
+  if (c) openPage(+c.dataset.p);
+  else if (v) { v.innerHTML = `<iframe src="${esc(v.dataset.v)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`; v.removeAttribute("data-v"); v.style.cursor = "default"; }
+};
 
 // ---- Chat AI (hilang saat ditutup) ----
 let chatMsgs = [], CL = [], busy = false, shown = new Set();
