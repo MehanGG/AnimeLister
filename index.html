@@ -60,6 +60,8 @@ body{-webkit-touch-callout:none;overscroll-behavior:none}
 .sbs{display:flex;gap:4px;align-items:flex-end;height:90px;margin-top:6px}
 .sb{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-size:.62rem;color:var(--mu)}
 .sb b{width:100%;background:var(--ac);border-radius:4px 4px 0 0;min-height:2px}
+.ad{position:absolute;bottom:5px;left:5px;background:#c0392b;color:#fff;font-weight:800;font-size:.66rem;padding:1px 6px;border-radius:6px}
+.adult .im img{filter:blur(14px)}
 .dd{position:relative;display:inline-block}
 .ddb{display:flex;gap:8px;align-items:center;padding:8px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);font-size:.88rem;font-weight:600}
 .ddb i{font-style:normal;color:var(--mu);font-size:.7rem}
@@ -115,6 +117,7 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
 .gl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:52vh;overflow:auto;padding-right:2px}
 @media(min-width:700px){.gl{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .gb{padding:13px 14px;border-radius:12px;text-align:left;font-weight:700;font-size:.86rem;background:var(--sf);border:1px solid var(--ln);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gb.a18:not(.on){border-color:#c0392b;color:#e5645a}
 .gb.on{background:var(--ac);border-color:var(--ac);color:#fff}
 @media(max-width:560px){.grid{gap:8px}.dl{flex-direction:column}.dl img{width:100px}}
 @media(hover:hover){.card:hover .im{box-shadow:0 0 0 2px var(--ac)}}
@@ -154,16 +157,17 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const clean = s => (s || "").replace(/__|\*\*/g, "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").replace(/~!|!~/g, "");
 const GEN = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror","Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi","Slice of Life","Sports","Supernatural","Thriller"];
 let ALL = null, tagP = null;
+const ADULT = new Set();
 const GSET = new Set();
 const SORTS = [["POPULARITY_DESC","s1"],["POPULARITY","s2"],["START_DATE_DESC","s3"],["START_DATE","s4"],["SCORE_DESC","s5"],["SCORE","s6"]];
 const TABS = ["pop","rank","new","rec","genre","sched","waifu","favT"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",favT:"Favorit",more2:"Lihat Selengkapnya..",favAdd:"♡ Favorit",favOn:"♥ Difavoritkan",back:"← Kembali",favEmpty:"Belum ada favorit. Buka detail anime lalu tekan ♡ Favorit.",d:{air:"Airing",fmt:"Format",ep:"Episode",dur:"Durasi episode",stat:"Status",sd:"Tanggal mulai",ed:"Tanggal selesai",sea:"Musim",pop:"Popularitas",stu:"Studio",gen:"Genre",typ:"Tipe",ro:"Romaji",en:"English",na:"Native",syn:"Sinonim",age:"Rating usia",ov:"Overview",ch:"Karakter",sf:"Staf",sts:"Statistik",s2:"Season 2 / Lanjutan:",rel:"Yang bersangkutan:",sim:"Yang serupa:",favs:"Difavoritkan",dist:"Status pengguna",sdist:"Sebaran skor",age18:"18+",ageAll:"Umum (bukan 18+)",min:"mnt",next:"Ep",avg:"Skor rata-rata",trn:"Diterjemahkan otomatis",u:{CURRENT:"Sedang ditonton/dibaca",PLANNING:"Rencana",COMPLETED:"Selesai",DROPPED:"Drop",PAUSED:"Ditunda",REPEATING:"Ulang"}},chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",dob:"Tanggal lahir",dp:["Tgl","Bulan","Tahun"],dobWarn:"Tidak bisa diubah setelah disimpan. Jika usiamu 18+, konten dewasa ikut ditampilkan.",dobSave:"Simpan tanggal lahir",dobSure:"Yakin? Ketuk lagi untuk menyimpan permanen",dobBad:"Pilih tanggal yang valid",adultOn:"Konten dewasa: aktif",adultOff:"Konten dewasa: nonaktif",favT:"Favorit",more2:"Lihat Selengkapnya..",favAdd:"♡ Favorit",favOn:"♥ Difavoritkan",back:"← Kembali",favEmpty:"Belum ada favorit. Buka detail anime lalu tekan ♡ Favorit.",d:{air:"Airing",fmt:"Format",ep:"Episode",dur:"Durasi episode",stat:"Status",sd:"Tanggal mulai",ed:"Tanggal selesai",sea:"Musim",pop:"Popularitas",stu:"Studio",gen:"Genre",typ:"Tipe",ro:"Romaji",en:"English",na:"Native",syn:"Sinonim",age:"Rating usia",ov:"Overview",ch:"Karakter",sf:"Staf",sts:"Statistik",s2:"Season 2 / Lanjutan:",rel:"Yang bersangkutan:",sim:"Yang serupa:",favs:"Difavoritkan",dist:"Status pengguna",sdist:"Sebaran skor",age18:"18+",ageAll:"Umum (bukan 18+)",min:"mnt",next:"Ep",avg:"Skor rata-rata",trn:"Diterjemahkan otomatis",u:{CURRENT:"Sedang ditonton/dibaca",PLANNING:"Rencana",COMPLETED:"Selesai",DROPPED:"Drop",PAUSED:"Ditunda",REPEATING:"Ulang"}},chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",favT:"Favorites",more2:"See more..",favAdd:"♡ Favorite",favOn:"♥ Favorited",back:"← Back",favEmpty:"No favorites yet. Open a title and tap ♡ Favorite.",d:{air:"Airing",fmt:"Format",ep:"Episodes",dur:"Episode duration",stat:"Status",sd:"Start date",ed:"End date",sea:"Season",pop:"Popularity",stu:"Studios",gen:"Genres",typ:"Type",ro:"Romaji",en:"English",na:"Native",syn:"Synonyms",age:"Age rating",ov:"Overview",ch:"Characters",sf:"Staff",sts:"Stats",s2:"Season 2 / Sequel:",rel:"Related:",sim:"Similar:",favs:"Favorited",dist:"User status",sdist:"Score distribution",age18:"18+",ageAll:"General (not 18+)",min:"min",next:"Ep",avg:"Average score",trn:"",u:{CURRENT:"Current",PLANNING:"Planning",COMPLETED:"Completed",DROPPED:"Dropped",PAUSED:"Paused",REPEATING:"Repeating"}},chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",dob:"Date of birth",dp:["Day","Month","Year"],dobWarn:"Cannot be changed once saved. If you are 18+, adult titles will be shown too.",dobSave:"Save date of birth",dobSure:"Sure? Tap again to save permanently",dobBad:"Pick a valid date",adultOn:"Adult content: on",adultOff:"Adult content: off",favT:"Favorites",more2:"See more..",favAdd:"♡ Favorite",favOn:"♥ Favorited",back:"← Back",favEmpty:"No favorites yet. Open a title and tap ♡ Favorite.",d:{air:"Airing",fmt:"Format",ep:"Episodes",dur:"Episode duration",stat:"Status",sd:"Start date",ed:"End date",sea:"Season",pop:"Popularity",stu:"Studios",gen:"Genres",typ:"Type",ro:"Romaji",en:"English",na:"Native",syn:"Synonyms",age:"Age rating",ov:"Overview",ch:"Characters",sf:"Staff",sts:"Stats",s2:"Season 2 / Sequel:",rel:"Related:",sim:"Similar:",favs:"Favorited",dist:"User status",sdist:"Score distribution",age18:"18+",ageAll:"General (not 18+)",min:"min",next:"Ep",avg:"Average score",trn:"",u:{CURRENT:"Current",PLANNING:"Planning",COMPLETED:"Completed",DROPPED:"Dropped",PAUSED:"Paused",REPEATING:"Repeating"}},chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
@@ -172,13 +176,22 @@ const t = k => L[P.lang][k] ?? k;
 const S = {tab:"pop", genres:[], year:"", sort:"POPULARITY_DESC", wd:new Date().getDay(), q:"", done:false, mc:""};
 let st = {list:[], page:1, more:false, b:null}, token = 0;
 
-const M = "id title{romaji english native} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
+const M = "id isAdult title{romaji english native} coverImage{large} averageScore popularity format episodes chapters status startDate{year} genres description(asHtml:false) siteUrl";
 const C = "id name{full native} image{large} gender favourites description(asHtml:false) siteUrl media(perPage:1,sort:POPULARITY_DESC){nodes{title{romaji}}}";
 const d0 = new Date(), mo = d0.getMonth();
 const [SN, SY] = mo < 2 ? ["WINTER", d0.getFullYear()] : mo < 5 ? ["SPRING", d0.getFullYear()] : mo < 8 ? ["SUMMER", d0.getFullYear()] : mo < 11 ? ["FALL", d0.getFullYear()] : ["WINTER", d0.getFullYear() + 1];
 
+const getDob = () => { try { return localStorage.getItem("aml_dob") || ""; } catch (e) { return ""; } };
+function adultOk(){
+  const d = getDob(); if (!d) return false;
+  const [y, m, dy] = d.split("-").map(Number), n = new Date();
+  let a = n.getFullYear() - y;
+  if (n.getMonth() + 1 < m || (n.getMonth() + 1 === m && n.getDate() < dy)) a--;
+  return a >= 18;
+}
+let dobTmp = {d:"", m:"", y:""}, dobSure = false;
 const MC = "characters(role:MAIN,sort:RELEVANCE,perPage:1){nodes{gender}}";
-const mq = (args, p) => `{Page(page:${p},perPage:25){pageInfo{hasNextPage} media(type:${P.mode},isAdult:false,${args}){${M} ${MC}}}}`;
+const mq = (args, p) => `{Page(page:${p},perPage:25){pageInfo{hasNextPage} media(type:${P.mode},${adultOk() ? "" : "isAdult:false,"}${args}){${M} ${MC}}}}`;
 
 async function gql(query, tries = 0){
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
@@ -195,7 +208,7 @@ async function gql(query, tries = 0){
 const jpl = o => [o.jp, o.ro].filter(Boolean).join(" · ");
 const nm = m => {
   const sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "";
-  return {id:m.id, name:m.title.english || m.title.romaji, jp:m.title.native || "", ro:m.title.romaji && m.title.romaji !== (m.title.english || m.title.romaji) ? m.title.romaji : "", img:m.coverImage.large, score:sc,
+  return {id:m.id, adult:!!m.isAdult, name:m.title.english || m.title.romaji, jp:m.title.native || "", ro:m.title.romaji && m.title.romaji !== (m.title.english || m.title.romaji) ? m.title.romaji : "", img:m.coverImage.large, score:sc,
     mcg:m.characters ? (m.characters.nodes[0] || {}).gender || "" : "",
     mcl:m.characters ? ({Male:t("male"), Female:t("female")}[(m.characters.nodes[0] || {}).gender] || (m.characters.nodes[0] || {}).gender || t("unk")) : undefined,
     meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
@@ -242,7 +255,7 @@ function norm(data, kind){
   if (kind === "sched") {
     const seen = new Set(), out = [];
     [...data.a.airingSchedules, ...data.b.airingSchedules].forEach(x => {
-      if (x.media.isAdult || seen.has(x.media.id)) return;
+      if ((x.media.isAdult && !adultOk()) || seen.has(x.media.id)) return;
       seen.add(x.media.id);
       const o = nm(x.media);
       o.badge = new Date(x.airingAt * 1000).toLocaleTimeString(P.lang, {hour:"2-digit", minute:"2-digit", hour12:false});
@@ -257,7 +270,7 @@ function norm(data, kind){
 function cards(items, from, rank){
   return items.map((o, i) => {
     const n = from + i, b = o.badge ? `<span class="bd">${esc(o.badge)}</span>` : rank ? `<span class="bd">#${n + 1}</span>` : "";
-    return `<button class="card" data-i="${n}"><span class="im">${b}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span>${jpl(o) ? `<span class="m">${esc(jpl(o))}</span>` : ""}<span class="m">${esc(o.meta)}</span></button>`;
+    return `<button class="card${o.adult ? " adult" : ""}" data-i="${n}"><span class="im">${b}${o.adult ? '<span class="ad">18+</span>' : ""}${o.score ? `<span class="sc">★ ${o.score}</span>` : ""}<img loading="lazy" src="${esc(o.img)}" alt="${esc(o.name)}"></span><span class="t">${esc(o.name)}</span>${jpl(o) ? `<span class="m">${esc(jpl(o))}</span>` : ""}<span class="m">${esc(o.meta)}</span></button>`;
   }).join("");
 }
 
@@ -312,12 +325,26 @@ const dd = (id, opts, val) => {
   return `<div class="dd" id="${id}"><button type="button" class="ddb"><span>${esc(cur)}</span><i>▾</i></button><div class="ddm" hidden>${opts.map(([v, l]) => `<button type="button" class="ddo ${String(v) === String(val) ? "on" : ""}" data-v="${esc(v)}">${esc(l)}</button>`).join("")}</div></div>`;
 };
 function renderSet(){
-  const f = (l, h) => `<div class="fld"><span>${l}</span>${h}</div>`;
-  $("setBody").innerHTML = f(t("lang"), dd("sLang", [["id","Bahasa Indonesia"],["en","English"]], P.lang)) +
+  const f = (l, h) => `<div class="fld"><span>${l}</span>${h}</div>`, dob = getDob(), loc = P.lang === "id" ? "id-ID" : "en-US";
+  let h = f(t("lang"), dd("sLang", [["id","Bahasa Indonesia"],["en","English"]], P.lang)) +
     f(t("theme"), dd("sTheme", [["auto",t("auto")],["light",t("light")],["dark",t("dark")]], P.theme)) +
     f(t("cols"), dd("sCols", [3,4,5,6].map(n => [n, n]), P.cols));
+  if (dob) {
+    const [y, m, d] = dob.split("-").map(Number);
+    h += f(t("dob") + " 🔒", `<span style="font-size:.85rem">${new Date(y, m - 1, d).toLocaleDateString(loc, {day:"numeric", month:"long", year:"numeric"})}</span>`) +
+      `<div class="sub" style="padding-top:8px">${adultOk() ? t("adultOn") : t("adultOff")}</div>`;
+  } else {
+    const dp = t("dp"), cy = new Date().getFullYear();
+    const days = [["", dp[0]]], mons = [["", dp[1]]], yrs = [["", dp[2]]];
+    for (let i = 1; i <= 31; i++) days.push([i, i]);
+    for (let i = 1; i <= 12; i++) mons.push([i, new Date(2000, i - 1, 1).toLocaleDateString(loc, {month:"long"})]);
+    for (let i = cy - 5; i >= 1920; i--) yrs.push([i, i]);
+    h += `<div style="padding:10px 0"><div style="margin-bottom:8px">${t("dob")}</div><div class="row">${dd("dobD", days, dobTmp.d)}${dd("dobM", mons, dobTmp.m)}${dd("dobY", yrs, dobTmp.y)}</div><div class="sub" style="margin:8px 0">${t("dobWarn")}</div><button class="pri" id="dobSave">${t("dobSave")}</button></div>`;
+  }
+  $("setBody").innerHTML = h;
 }
 function ddPick(id, v){
+  if (id.startsWith("dob")) { dobTmp[id[3].toLowerCase()] = v; dobSure = false; $("dobSave").textContent = t("dobSave"); return; }
   if (id === "fY") { S.year = v; run(false); }
   else if (id === "fS") { S.sort = v; run(false); }
   else if (id === "fM") { S.mc = v; run(false); }
@@ -339,14 +366,15 @@ document.addEventListener("click", e => {
 });
 function fillGl(){
   const q = ($("gq").value || "").toLowerCase();
-  $("gl").innerHTML = ALL.filter(n => n.toLowerCase().includes(q)).map(n => `<button class="gb ${S.genres.includes(n) ? "on" : ""}" data-g="${esc(n)}">${esc(n)}</button>`).join("");
+  $("gl").innerHTML = ALL.filter(n => n.toLowerCase().includes(q)).map(n => `<button class="gb ${S.genres.includes(n) ? "on" : ""}${ADULT.has(n) ? " a18" : ""}" data-g="${esc(n)}">${esc(n)}${ADULT.has(n) ? " · 18+" : ""}</button>`).join("");
   $("gc").textContent = S.genres.length ? "(" + S.genres.length + ")" : "";
 }
 async function loadTags(){
   try {
     const d = await gql("{GenreCollection MediaTagCollection{name isAdult}}");
-    d.GenreCollection.filter(g => g !== "Hentai").forEach(g => GSET.add(g));
-    ALL = [...new Set([...GSET, ...d.MediaTagCollection.filter(x => !x.isAdult).map(x => x.name)])].sort((a, b) => a.localeCompare(b));
+    d.GenreCollection.filter(g => adultOk() || g !== "Hentai").forEach(g => GSET.add(g));
+    ADULT.clear(); if (adultOk()) { ADULT.add("Hentai"); d.MediaTagCollection.filter(x => x.isAdult).forEach(x => ADULT.add(x.name)); }
+    ALL = [...new Set([...GSET, ...d.MediaTagCollection.filter(x => adultOk() || !x.isAdult).map(x => x.name)])].sort((a, b) => a.localeCompare(b));
   } catch (e) { GEN.forEach(g => GSET.add(g)); ALL = [...GEN]; }
   tagP = null;
   if (S.tab === "rec" || S.tab === "genre") renderCtl();
@@ -425,6 +453,14 @@ function openDetail(o){
 $("out").onclick = e => { const c = e.target.closest(".card"); if (c) openDetail(st.list[c.dataset.i]); };
 $("more").onclick = () => run(true);
 $("gear").onclick = () => $("set").showModal();
+$("setBody").onclick = e => {
+  if (e.target.id !== "dobSave" || getDob()) return;
+  const {d, m, y} = dobTmp, dt = new Date(+y, +m - 1, +d);
+  if (!d || !m || !y || dt.getMonth() !== m - 1 || dt.getDate() !== +d) { e.target.textContent = t("dobBad"); dobSure = false; return; }
+  if (!dobSure) { dobSure = true; e.target.textContent = t("dobSure"); return; }
+  try { localStorage.setItem("aml_dob", y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0")); } catch (er) {}
+  ALL = null; GSET.clear(); tagP = null; renderSet(); renderCtl(); if (S.tab !== "favT") run(false);
+};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
 
 
@@ -434,7 +470,7 @@ const favHas = id => favLoad().some(x => x.id === id);
 function favToggle(o){
   let a = favLoad();
   if (a.some(x => x.id === o.id)) a = a.filter(x => x.id !== o.id);
-  else a.unshift({id:o.id, name:o.name, jp:o.jp, ro:o.ro, img:o.img, score:o.score, meta:o.meta, info:o.info, text:o.text, url:o.url});
+  else a.unshift({id:o.id, adult:o.adult, name:o.name, jp:o.jp, ro:o.ro, img:o.img, score:o.score, meta:o.meta, info:o.info, text:o.text, url:o.url});
   try { localStorage.setItem("aml_fav", JSON.stringify(a)); } catch (e) {}
   if (S.tab === "favT") showFav();
 }
@@ -478,7 +514,7 @@ function pgBack(){
 }
 function renderPage(m){
   const D = t("d"), sc = m.averageScore ? (m.averageScore / 10).toFixed(1) : "", name = m.title.english || m.title.romaji;
-  const o = pgO = {id:m.id, name, jp:m.title.native || "", ro:m.title.romaji !== name ? m.title.romaji : "", img:m.coverImage.large, score:sc,
+  const o = pgO = {id:m.id, adult:m.isAdult, name, jp:m.title.native || "", ro:m.title.romaji !== name ? m.title.romaji : "", img:m.coverImage.large, score:sc,
     meta:[m.format, m.startDate && m.startDate.year, m.episodes ? m.episodes + " eps" : m.chapters ? m.chapters + " ch" : ""].filter(Boolean).join(" · "),
     info:"★ " + (sc || "-"), text:clean(m.description) || t("nod"), url:m.siteUrl};
   const fd = x => x && x.year ? [x.day, x.month, x.year].filter(Boolean).join("/") : "-", nx = m.nextAiringEpisode, T = m.trailer;
