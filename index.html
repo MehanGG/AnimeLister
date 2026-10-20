@@ -117,7 +117,6 @@ dialog::backdrop{background:rgba(5,10,25,.6)}
 .gl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:52vh;overflow:auto;padding-right:2px}
 @media(min-width:700px){.gl{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .gb{padding:13px 14px;border-radius:12px;text-align:left;font-weight:700;font-size:.86rem;background:var(--sf);border:1px solid var(--ln);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gb.a18:not(.on){border-color:#c0392b;color:#e5645a}
 .gb.on{background:var(--ac);border-color:var(--ac);color:#fff}
 @media(max-width:560px){.grid{gap:8px}.dl{flex-direction:column}.dl img{width:100px}}
 @media(hover:hover){.card:hover .im{box-shadow:0 0 0 2px var(--ac)}}
@@ -366,7 +365,7 @@ document.addEventListener("click", e => {
 });
 function fillGl(){
   const q = ($("gq").value || "").toLowerCase();
-  $("gl").innerHTML = ALL.filter(n => n.toLowerCase().includes(q)).map(n => `<button class="gb ${S.genres.includes(n) ? "on" : ""}${ADULT.has(n) ? " a18" : ""}" data-g="${esc(n)}">${esc(n)}${ADULT.has(n) ? " · 18+" : ""}</button>`).join("");
+  $("gl").innerHTML = ALL.filter(n => n.toLowerCase().includes(q)).map(n => `<button class="gb ${S.genres.includes(n) ? "on" : ""}" data-g="${esc(n)}">${esc(n)}</button>`).join("");
   $("gc").textContent = S.genres.length ? "(" + S.genres.length + ")" : "";
 }
 async function loadTags(){
