@@ -62,6 +62,13 @@ body{-webkit-touch-callout:none;overscroll-behavior:none}
 .sb b{width:100%;background:var(--ac);border-radius:4px 4px 0 0;min-height:2px}
 .ad{position:absolute;bottom:5px;left:5px;background:#c0392b;color:#fff;font-weight:800;font-size:.66rem;padding:1px 6px;border-radius:6px}
 .adult .im img{filter:blur(14px)}
+.nl{grid-column:1/-1;display:flex;flex-direction:column;gap:12px}
+.ni{display:flex;gap:12px;background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:10px}
+.nimg{flex:0 0 84px;height:120px;border-radius:10px;overflow:hidden;background:var(--ac2);display:grid;place-items:center;font-size:1.6rem;padding:0}
+.nimg img{width:100%;height:100%;object-fit:cover}
+.nb{min-width:0;display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.nb h4{margin:0;font-size:.9rem}
+.nn{font-weight:800;color:var(--ac);text-align:left;font-size:.88rem}
 .dd{position:relative;display:inline-block}
 .ddb{display:flex;gap:8px;align-items:center;padding:8px 14px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);font-size:.88rem;font-weight:600}
 .ddb i{font-style:normal;color:var(--mu);font-size:.7rem}
@@ -159,14 +166,14 @@ let ALL = null, tagP = null;
 const ADULT = new Set();
 const GSET = new Set();
 const SORTS = [["POPULARITY_DESC","s1"],["POPULARITY","s2"],["START_DATE_DESC","s3"],["START_DATE","s4"],["SCORE_DESC","s5"],["SCORE","s6"]];
-const TABS = ["pop","rank","new","rec","genre","sched","waifu","favT"];
+const TABS = ["pop","rank","new","rec","genre","sched","waifu","news","favT"];
 const L = {
   id:{pop:"Populer",rank:"Ranking",new:"Baru rilis",rec:"Rekomendasi",genre:"Genre",sched:"Jadwal",waifu:"Waifu",ph:"Cari judul…",go:"Cari",more:"Muat lebih banyak",load:"Memuat…",empty:"Tidak ada hasil. Ubah filter atau kata kunci.",retry:"Coba lagi",set:"Pengaturan",lang:"Bahasa",theme:"Tema",auto:"Otomatis",light:"Terang",dark:"Gelap",cols:"Kartu per baris",year:"Semua tahun",reset:"Reset filter",genres:"Genre & tema (bisa pilih banyak)",gs:"Cari genre…",open:"Buka di AniList",res:"Hasil",
     s1:"Terpopuler → terendah",s2:"Terendah → terpopuler",s3:"Terbaru → terlama",s4:"Terlama → terbaru",s5:"Skor tertinggi",s6:"Skor terendah",
-    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",dob:"Tanggal lahir",dp:["Tgl","Bulan","Tahun"],dobWarn:"Tidak bisa diubah setelah disimpan. Jika usiamu 18+, konten dewasa ikut ditampilkan.",dobSave:"Simpan tanggal lahir",dobSure:"Yakin? Ketuk lagi untuk menyimpan permanen",dobBad:"Pilih tanggal yang valid",adultOn:"Konten dewasa: aktif",adultOff:"Konten dewasa: nonaktif",favT:"Favorit",more2:"Lihat Selengkapnya..",favAdd:"♡ Favorit",favOn:"♥ Difavoritkan",back:"← Kembali",favEmpty:"Belum ada favorit. Buka detail anime lalu tekan ♡ Favorit.",d:{air:"Airing",fmt:"Format",ep:"Episode",dur:"Durasi episode",stat:"Status",sd:"Tanggal mulai",ed:"Tanggal selesai",sea:"Musim",pop:"Popularitas",stu:"Studio",gen:"Genre",typ:"Tipe",ro:"Romaji",en:"English",na:"Native",syn:"Sinonim",age:"Rating usia",ov:"Overview",ch:"Karakter",sf:"Staf",sts:"Statistik",s2:"Season 2 / Lanjutan:",rel:"Yang bersangkutan:",sim:"Yang serupa:",favs:"Difavoritkan",dist:"Status pengguna",sdist:"Sebaran skor",age18:"18+",ageAll:"Umum (bukan 18+)",min:"mnt",next:"Ep",avg:"Skor rata-rata",trn:"Diterjemahkan otomatis",u:{CURRENT:"Sedang ditonton/dibaca",PLANNING:"Rencana",COMPLETED:"Selesai",DROPPED:"Drop",PAUSED:"Ditunda",REPEATING:"Ulang"}},chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
+    st:{FINISHED:"Selesai",RELEASING:"Sedang rilis",NOT_YET_RELEASED:"Belum rilis",CANCELLED:"Dibatalkan",HIATUS:"Hiatus"},nod:"Belum ada deskripsi.",done:"Sudah tamat",news:"News",nOpen:"Buka Selengkapnya",nStudio:"Studio",nNone:"Belum ada berita.",dob:"Tanggal lahir",dp:["Tgl","Bulan","Tahun"],dobWarn:"Tidak bisa diubah setelah disimpan. Jika usiamu 18+, konten dewasa ikut ditampilkan.",dobSave:"Simpan tanggal lahir",dobSure:"Yakin? Ketuk lagi untuk menyimpan permanen",dobBad:"Pilih tanggal yang valid",adultOn:"Konten dewasa: aktif",adultOff:"Konten dewasa: nonaktif",favT:"Favorit",more2:"Lihat Selengkapnya..",favAdd:"♡ Favorit",favOn:"♥ Difavoritkan",back:"← Kembali",favEmpty:"Belum ada favorit. Buka detail anime lalu tekan ♡ Favorit.",d:{air:"Airing",fmt:"Format",ep:"Episode",dur:"Durasi episode",stat:"Status",sd:"Tanggal mulai",ed:"Tanggal selesai",sea:"Musim",pop:"Popularitas",stu:"Studio",gen:"Genre",typ:"Tipe",ro:"Romaji",en:"English",na:"Native",syn:"Sinonim",age:"Rating usia",ov:"Overview",ch:"Karakter",sf:"Staf",sts:"Statistik",s2:"Season 2 / Lanjutan:",rel:"Yang bersangkutan:",sim:"Yang serupa:",favs:"Difavoritkan",dist:"Status pengguna",sdist:"Sebaran skor",age18:"18+",ageAll:"Umum (bukan 18+)",min:"mnt",next:"Ep",avg:"Skor rata-rata",trn:"Diterjemahkan otomatis",u:{CURRENT:"Sedang ditonton/dibaca",PLANNING:"Rencana",COMPLETED:"Selesai",DROPPED:"Drop",PAUSED:"Ditunda",REPEATING:"Ulang"}},chatT:"Tanya AI",chatPh:"Tanya soal anime…",chatSend:"Kirim",chatHi:"Hai! Tanya apa saja soal anime atau manga. Chat akan terhapus saat ditutup.",chatErr:"AI tidak bisa dijangkau",chips:["Rekomendasi 10 anime isekai","Anime romcom yang ringan","Anime mirip Frieren"],mcAll:"MC: Semua",mcM:"MC: Laki-laki",mcF:"MC: Perempuan",male:"Laki-laki",female:"Perempuan",unk:"Belum diketahui",trn:"Diterjemahkan otomatis ke Bahasa Indonesia",trf:"Terjemahan gagal, menampilkan teks asli",fav:"favorit",err:"Gagal memuat",hint:"Rekomendasi berdasarkan skor. Pilih tahun atau genre untuk mempersempit."},
   en:{pop:"Popular",rank:"Ranking",new:"New releases",rec:"Recommended",genre:"Genres",sched:"Schedule",waifu:"Waifu",ph:"Search titles…",go:"Search",more:"Load more",load:"Loading…",empty:"No results. Change the filters or keywords.",retry:"Try again",set:"Settings",lang:"Language",theme:"Theme",auto:"Auto",light:"Light",dark:"Dark",cols:"Cards per row",year:"All years",reset:"Reset filters",genres:"Genres & themes (pick several)",gs:"Search genres…",open:"Open on AniList",res:"Results",
     s1:"Most → least popular",s2:"Least → most popular",s3:"Newest → oldest",s4:"Oldest → newest",s5:"Highest score",s6:"Lowest score",
-    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",dob:"Date of birth",dp:["Day","Month","Year"],dobWarn:"Cannot be changed once saved. If you are 18+, adult titles will be shown too.",dobSave:"Save date of birth",dobSure:"Sure? Tap again to save permanently",dobBad:"Pick a valid date",adultOn:"Adult content: on",adultOff:"Adult content: off",favT:"Favorites",more2:"See more..",favAdd:"♡ Favorite",favOn:"♥ Favorited",back:"← Back",favEmpty:"No favorites yet. Open a title and tap ♡ Favorite.",d:{air:"Airing",fmt:"Format",ep:"Episodes",dur:"Episode duration",stat:"Status",sd:"Start date",ed:"End date",sea:"Season",pop:"Popularity",stu:"Studios",gen:"Genres",typ:"Type",ro:"Romaji",en:"English",na:"Native",syn:"Synonyms",age:"Age rating",ov:"Overview",ch:"Characters",sf:"Staff",sts:"Stats",s2:"Season 2 / Sequel:",rel:"Related:",sim:"Similar:",favs:"Favorited",dist:"User status",sdist:"Score distribution",age18:"18+",ageAll:"General (not 18+)",min:"min",next:"Ep",avg:"Average score",trn:"",u:{CURRENT:"Current",PLANNING:"Planning",COMPLETED:"Completed",DROPPED:"Dropped",PAUSED:"Paused",REPEATING:"Repeating"}},chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
+    st:{FINISHED:"Finished",RELEASING:"Releasing",NOT_YET_RELEASED:"Upcoming",CANCELLED:"Cancelled",HIATUS:"Hiatus"},nod:"No description yet.",done:"Completed",news:"News",nOpen:"Read more",nStudio:"Studio",nNone:"No news yet.",dob:"Date of birth",dp:["Day","Month","Year"],dobWarn:"Cannot be changed once saved. If you are 18+, adult titles will be shown too.",dobSave:"Save date of birth",dobSure:"Sure? Tap again to save permanently",dobBad:"Pick a valid date",adultOn:"Adult content: on",adultOff:"Adult content: off",favT:"Favorites",more2:"See more..",favAdd:"♡ Favorite",favOn:"♥ Favorited",back:"← Back",favEmpty:"No favorites yet. Open a title and tap ♡ Favorite.",d:{air:"Airing",fmt:"Format",ep:"Episodes",dur:"Episode duration",stat:"Status",sd:"Start date",ed:"End date",sea:"Season",pop:"Popularity",stu:"Studios",gen:"Genres",typ:"Type",ro:"Romaji",en:"English",na:"Native",syn:"Synonyms",age:"Age rating",ov:"Overview",ch:"Characters",sf:"Staff",sts:"Stats",s2:"Season 2 / Sequel:",rel:"Related:",sim:"Similar:",favs:"Favorited",dist:"User status",sdist:"Score distribution",age18:"18+",ageAll:"General (not 18+)",min:"min",next:"Ep",avg:"Average score",trn:"",u:{CURRENT:"Current",PLANNING:"Planning",COMPLETED:"Completed",DROPPED:"Dropped",PAUSED:"Paused",REPEATING:"Repeating"}},chatT:"Ask AI",chatPh:"Ask about anime…",chatSend:"Send",chatHi:"Hi! Ask me anything about anime or manga. The chat is cleared when you close it.",chatErr:"Could not reach the AI",chips:["Recommend 10 isekai anime","A light romcom anime","Anime like Frieren"],mcAll:"MC: Any",mcM:"MC: Male",mcF:"MC: Female",male:"Male",female:"Female",unk:"Unknown",trn:"",trf:"",fav:"favorites",err:"Failed to load",hint:"Recommendations ranked by score. Pick a year or genres to narrow down."}
 };
 let P = {lang:"id", theme:"auto", cols:"5", mode:"ANIME"};
 try { Object.assign(P, JSON.parse(localStorage.getItem("aml") || "{}")); } catch (e) {}
@@ -274,6 +281,7 @@ function cards(items, from, rank){
 }
 
 async function run(append){
+  if (S.tab === "news") return showNews();
   if (S.tab === "favT") { token++; return showFav(); }
   const my = ++token, out = $("out");
   if (!append) { st = {list:[], page:1, more:false, b:builder()}; out.innerHTML = `<p class="msg">${t("load")}</p>`; $("more").hidden = true; }
@@ -303,7 +311,7 @@ function renderTabs(){
 }
 function renderTitle(){
   const mode = P.mode === "ANIME" ? "Anime" : "Manga";
-  $("title").textContent = S.tab === "search" ? `${t("res")}: "${S.q}"` : S.tab === "waifu" || S.tab === "favT" ? t(S.tab) : `${t(S.tab)} · ${mode}`;
+  $("title").textContent = S.tab === "search" ? `${t("res")}: "${S.q}"` : S.tab === "waifu" || S.tab === "favT" || S.tab === "news" ? t(S.tab) : `${t(S.tab)} · ${mode}`;
 }
 function renderCtl(){
   const c = $("ctl"), k = S.tab;
@@ -449,7 +457,7 @@ function openDetail(o){
       .catch(() => { if (my === dTok) $("dnote").textContent = t("trf"); });
   }
 }
-$("out").onclick = e => { const c = e.target.closest(".card"); if (c) openDetail(st.list[c.dataset.i]); };
+$("out").onclick = e => { const c = e.target.closest(".card"), np = e.target.closest("[data-p]"); if (c) openDetail(st.list[c.dataset.i]); else if (np) openPage(+np.dataset.p); };
 $("more").onclick = () => run(true);
 $("gear").onclick = () => $("set").showModal();
 $("setBody").onclick = e => {
@@ -555,6 +563,50 @@ $("pgb").onclick = e => {
   if (c) openPage(+c.dataset.p);
   else if (v) { v.innerHTML = `<iframe src="${esc(v.dataset.v)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`; v.removeAttribute("data-v"); v.style.cursor = "default"; }
 };
+
+// ---- News ----
+let newsCache = null;
+async function resolveNews(titles){
+  const map = {};
+  for (let i = 0; i < titles.length; i += 6) {
+    const part = titles.slice(i, i + 6);
+    const q = "{" + part.map((x, k) => `a${k}:Media(search:${JSON.stringify(x)},${adultOk() ? "" : "isAdult:false,"}sort:SEARCH_MATCH){id title{romaji english} coverImage{large} studios(isMain:true){nodes{name}}}`).join(" ") + "}";
+    try {
+      const r = await fetch(API, {method:"POST", headers:{"Content-Type":"application/json", Accept:"application/json"}, body:JSON.stringify({query:q})});
+      const j = await r.json().catch(() => ({}));
+      part.forEach((x, k) => { const m = (j.data || {})["a" + k]; if (m) map[x] = {id:m.id, name:m.title.english || m.title.romaji, img:m.coverImage.large, studio:(m.studios.nodes[0] || {}).name || ""}; });
+    } catch (e) {}
+  }
+  return map;
+}
+function newsHTML(l){
+  const loc = P.lang === "id" ? "id-ID" : "en-US";
+  return `<div class="nl">` + l.map(x => {
+    const a = x.a, d = x.date ? new Date(x.date).toLocaleDateString(loc, {day:"numeric", month:"long", year:"numeric"}) : "";
+    const img = a ? `<button class="nimg" data-p="${a.id}"><img loading="lazy" src="${esc(a.img)}" alt=""></button>` : `<div class="nimg">📰</div>`;
+    return `<article class="ni">${img}<div class="nb">${a ? `<button class="nn" data-p="${a.id}">${esc(a.name)}</button>` : ""}${a && a.studio ? `<div class="sub">${t("nStudio")}: ${esc(a.studio)}</div>` : ""}<h4>${esc(x.title)}</h4><div class="sub">${esc(d)} · ${esc(x.source)}</div><a class="chip" href="${esc(x.link)}" target="_blank" rel="noopener">${t("nOpen")}</a></div></article>`;
+  }).join("") + `</div>`;
+}
+async function showNews(){
+  const my = ++token;
+  st = {list:[], page:1, more:false, b:{kind:"media", rank:false}};
+  $("more").hidden = true;
+  $("out").innerHTML = `<p class="msg">${t("load")}</p>`;
+  try {
+    if (!newsCache) {
+      const r = await fetch("/api/news"), j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "HTTP " + r.status);
+      const map = await resolveNews([...new Set(j.items.map(x => x.anime).filter(Boolean))]);
+      newsCache = j.items.map(x => ({...x, a:x.anime ? map[x.anime] || null : null}));
+    }
+    if (my !== token) return;
+    $("out").innerHTML = newsCache.length ? newsHTML(newsCache) : `<p class="msg">${t("nNone")}</p>`;
+  } catch (e) {
+    if (my !== token) return;
+    $("out").innerHTML = `<p class="msg">${t("err")} (${esc(e.message)})<br><br><button class="pri" id="retry">${t("retry")}</button></p>`;
+    $("retry").onclick = showNews;
+  }
+}
 
 // ---- Chat AI (hilang saat ditutup) ----
 let chatMsgs = [], CL = [], busy = false, shown = new Set();
