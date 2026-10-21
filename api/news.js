@@ -12,7 +12,8 @@ function parse(xml, source){
   for (const block of xml.match(/<item[\s>][\s\S]*?<\/item>/g) || []) {
     const get = tag => { const m = block.match(new RegExp("<" + tag + "[^>]*>([\\s\\S]*?)</" + tag + ">")); return m ? dec(m[1].trim()) : ""; };
     const title = get("title"), link = get("link"), d = new Date(get("pubDate"));
-    if (title && link) out.push({ title, link, source, date: isNaN(d) ? "" : d.toISOString() });
+    const im = block.match(/<enclosure[^>]*?url="([^"]+)"/) || block.match(/<media:(?:thumbnail|content)[^>]*?url="([^"]+)"/) || block.match(/<img[^>]*?src=["']([^"']+)["']/);
+    if (title && link) out.push({ title, link, source, date: isNaN(d) ? "" : d.toISOString(), desc: get("description").slice(0, 900), img: im && /^https?:/.test(im[1]) ? im[1].replace(/&amp;/g, "&") : "" });
   }
   return out;
 }
