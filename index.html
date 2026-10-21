@@ -566,7 +566,7 @@ $("pgb").onclick = e => {
 };
 
 // ---- News ----
-let newsCache = null;
+let newsCache = null, newsAi = "ok";
 async function resolveNews(titles){
   const map = {};
   for (let i = 0; i < titles.length; i += 6) {
@@ -585,7 +585,7 @@ function newsHTML(l){
   return `<div class="nl">` + l.map((x, i) => {
     const a = x.a, d = x.date ? new Date(x.date).toLocaleDateString(loc, {day:"numeric", month:"long", year:"numeric"}) : "";
     const pic = a ? a.img : x.img;
-    const img = pic ? `<button class="nimg" data-n="${i}"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(pic)}" alt=""></button>` : `<button class="nimg" data-n="${i}">📰</button>`;
+    const img = pic ? `<button class="nimg" data-n="${i}"><img loading="lazy" referrerpolicy="no-referrer" src="${esc(pic)}" alt="" onerror="this.replaceWith(document.createTextNode('📰'))"></button>` : `<button class="nimg" data-n="${i}">📰</button>`;
     return `<article class="ni">${img}<div class="nb">${a ? `<button class="nn" data-p="${a.id}">${esc(a.name)}</button>` : ""}${a && a.studio ? `<div class="sub">${t("nStudio")}: ${esc(a.studio)}</div>` : ""}<h4>${esc(x.title)}</h4><div class="sub">${esc(d)} · ${esc(x.source)}</div><button class="chip" data-n="${i}">${t("nOpen")}</button></div></article>`;
   }).join("") + `</div>`;
 }
@@ -612,11 +612,12 @@ async function showNews(){
     if (!newsCache) {
       const r = await fetch("/api/news"), j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "HTTP " + r.status);
+      newsAi = j.ai || "ok";
       const map = await resolveNews([...new Set(j.items.map(x => x.anime).filter(Boolean))]);
       newsCache = j.items.map(x => ({...x, a:x.anime ? map[x.anime] || null : null}));
     }
     if (my !== token) return;
-    $("out").innerHTML = newsCache.length ? newsHTML(newsCache) : `<p class="msg">${t("nNone")}</p>`;
+    $("out").innerHTML = newsCache.length ? (newsAi !== "ok" ? `<p class="sub" style="grid-column:1/-1">⚠ ${esc(newsAi)}</p>` : "") + newsHTML(newsCache) : `<p class="msg">${t("nNone")}</p>`;
   } catch (e) {
     if (my !== token) return;
     $("out").innerHTML = `<p class="msg">${t("err")} (${esc(e.message)})<br><br><button class="pri" id="retry">${t("retry")}</button></p>`;
